@@ -1,0 +1,497 @@
+{
+  "nodes": [
+    {
+      "id": "pdfFile_0",
+      "position": {
+        "x": 100,
+        "y": 200
+      },
+      "type": "customNode",
+      "data": {
+        "id": "pdfFile_0",
+        "label": "Pdf File",
+        "version": 1,
+        "name": "pdfFile",
+        "type": "Document",
+        "baseClasses": ["Document"],
+        "category": "Document Loaders",
+        "description": "Load data from PDF files",
+        "inputParams": [
+          {
+            "label": "Pdf File",
+            "name": "pdfFile",
+            "type": "file",
+            "fileType": ".pdf"
+          },
+          {
+            "label": "Usage",
+            "name": "usage",
+            "type": "options",
+            "options": [
+              {
+                "label": "One document per page",
+                "name": "perPage"
+              },
+              {
+                "label": "One document per file",
+                "name": "perFile"
+              }
+            ],
+            "default": "perPage"
+          },
+          {
+            "label": "Use Legacy Build",
+            "name": "legacyBuild",
+            "type": "boolean",
+            "optional": true,
+            "additionalParams": true
+          },
+          {
+            "label": "Metadata",
+            "name": "metadata",
+            "type": "json",
+            "optional": true,
+            "additionalParams": true
+          }
+        ],
+        "inputAnchors": [],
+        "inputs": {
+          "usage": "perFile",
+          "legacyBuild": false
+        },
+        "outputAnchors": [
+          {
+            "id": "pdfFile_0-output-document-Document",
+            "name": "document",
+            "label": "Document",
+            "description": "Load data from PDF files",
+            "type": "Document"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 329,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "chatGoogleGenerativeAI_0",
+      "position": {
+        "x": 600,
+        "y": 200
+      },
+      "type": "customNode",
+      "data": {
+        "id": "chatGoogleGenerativeAI_0",
+        "label": "ChatGoogleGenerativeAI",
+        "version": 6,
+        "name": "chatGoogleGenerativeAI",
+        "type": "ChatGoogleGenerativeAI",
+        "baseClasses": ["ChatGoogleGenerativeAI", "BaseChatModel", "BaseLanguageModel"],
+        "category": "Chat Models",
+        "description": "Wrapper around Google Gemini large language models that use the Chat endpoint",
+        "inputParams": [
+          {
+            "label": "Connect Credential",
+            "name": "credential",
+            "type": "credential",
+            "credentialNames": ["googleGenerativeAI"]
+          },
+          {
+            "label": "Model Name",
+            "name": "modelName",
+            "type": "asyncOptions",
+            "loadMethod": "listModels",
+            "default": "gemini-1.5-flash"
+          },
+          {
+            "label": "Temperature",
+            "name": "temperature",
+            "type": "number",
+            "step": 0.1,
+            "default": 0.9,
+            "optional": true
+          },
+          {
+            "label": "Max Output Tokens",
+            "name": "maxOutputTokens",
+            "type": "number",
+            "step": 1,
+            "optional": true,
+            "additionalParams": true
+          },
+          {
+            "label": "Top Probability",
+            "name": "topP",
+            "type": "number",
+            "step": 0.1,
+            "optional": true,
+            "additionalParams": true
+          },
+          {
+            "label": "Top Next Highest Probability Tokens",
+            "name": "topK",
+            "type": "number",
+            "step": 1,
+            "optional": true,
+            "additionalParams": true
+          },
+          {
+            "label": "Harm Category",
+            "name": "harmCategory",
+            "type": "multiOptions",
+            "options": [
+              {
+                "label": "Dangerous",
+                "name": "HARM_CATEGORY_DANGEROUS_CONTENT"
+              },
+              {
+                "label": "Harassment",
+                "name": "HARM_CATEGORY_HARASSMENT"
+              },
+              {
+                "label": "Hate Speech",
+                "name": "HARM_CATEGORY_HATE_SPEECH"
+              },
+              {
+                "label": "Sexually Explicit",
+                "name": "HARM_CATEGORY_SEXUALLY_EXPLICIT"
+              }
+            ],
+            "optional": true,
+            "additionalParams": true
+          },
+          {
+            "label": "Harm Block Threshold",
+            "name": "harmBlockThreshold",
+            "type": "options",
+            "options": [
+              {
+                "label": "Low and Above",
+                "name": "BLOCK_LOW_AND_ABOVE"
+              },
+              {
+                "label": "Medium and Above",
+                "name": "BLOCK_MEDIUM_AND_ABOVE"
+              },
+              {
+                "label": "Only High",
+                "name": "BLOCK_ONLY_HIGH"
+              },
+              {
+                "label": "None",
+                "name": "BLOCK_NONE"
+              }
+            ],
+            "optional": true,
+            "additionalParams": true
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Cache",
+            "name": "cache",
+            "type": "BaseCache",
+            "optional": true
+          }
+        ],
+        "inputs": {
+          "modelName": "gemini-2.0-flash-exp",
+          "temperature": 0.1,
+          "maxOutputTokens": 2000,
+          "topP": 0.8
+        },
+        "outputAnchors": [
+          {
+            "id": "chatGoogleGenerativeAI_0-output-chatGoogleGenerativeAI-ChatGoogleGenerativeAI|BaseChatModel|BaseLanguageModel",
+            "name": "chatGoogleGenerativeAI",
+            "label": "ChatGoogleGenerativeAI",
+            "description": "Wrapper around Google Gemini large language models that use the Chat endpoint",
+            "type": "ChatGoogleGenerativeAI | BaseChatModel | BaseLanguageModel"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 574,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 600,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "conversationalRetrievalQAChain_0",
+      "position": {
+        "x": 1100,
+        "y": 200
+      },
+      "type": "customNode",
+      "data": {
+        "id": "conversationalRetrievalQAChain_0",
+        "label": "Conversational Retrieval QA Chain",
+        "version": 3,
+        "name": "conversationalRetrievalQAChain",
+        "type": "ConversationalRetrievalQAChain",
+        "baseClasses": ["ConversationalRetrievalQAChain", "BaseChain"],
+        "category": "Chains",
+        "description": "Document QA - built on RetrievalQAChain to provide a chat history component",
+        "inputParams": [
+          {
+            "label": "System Message",
+            "name": "systemMessagePrompt",
+            "type": "string",
+            "rows": 4,
+            "additionalParams": true,
+            "optional": true,
+            "placeholder": "I want you to act as a document that I am having a conversation with. Your name is \"AI Assistant\". You will provide me with answers from the given info. If the answer is not included, say exactly \"Hmm, I am not sure.\" and stop after that. Refuse to answer any question not about the info. Never break character."
+          },
+          {
+            "label": "Chain Option",
+            "name": "chainOption",
+            "type": "options",
+            "options": [
+              {
+                "label": "MapReduceDocumentsChain",
+                "name": "map_reduce",
+                "description": "Suitable for QA tasks over larger documents and can run the preprocessing step in parallel, reducing the running time"
+              },
+              {
+                "label": "RefineDocumentsChain",
+                "name": "refine",
+                "description": "Suitable for QA tasks over a large number of documents."
+              },
+              {
+                "label": "StuffDocumentsChain",
+                "name": "stuff",
+                "description": "Suitable for QA tasks over a small number of documents."
+              }
+            ],
+            "additionalParams": true,
+            "optional": true
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Chat Model",
+            "name": "model",
+            "type": "BaseChatModel"
+          },
+          {
+            "label": "Vector Store Retriever",
+            "name": "vectorStoreRetriever",
+            "type": "BaseRetriever"
+          },
+          {
+            "label": "Memory",
+            "name": "memory",
+            "type": "BaseMemory",
+            "optional": true
+          },
+          {
+            "label": "Input Moderation",
+            "name": "inputModeration",
+            "type": "Moderation",
+            "optional": true,
+            "list": true
+          }
+        ],
+        "inputs": {
+          "model": "{{chatGoogleGenerativeAI_0.data.instance}}",
+          "vectorStoreRetriever": "{{memoryVectorStore_0.data.instance}}",
+          "systemMessagePrompt": "Eres un agente especializado en convertir CVs y cartas de presentación a formato JSON estructurado.\n\n## Formato de salida requerido:\n```json\n{\n  \"personal\": {\n    \"name\": \"Nombre completo\",\n    \"title\": \"Título profesional principal\",\n    \"email\": \"email@ejemplo.com\",\n    \"phone\": \"+57 300 123 4567\",\n    \"location\": \"Ciudad, País\",\n    \"summary\": \"Resumen profesional en 2-3 líneas\"\n  },\n  \"experience\": [\n    {\n      \"id\": 1,\n      \"company\": \"Nombre empresa\",\n      \"position\": \"Cargo\",\n      \"startDate\": \"YYYY-MM\",\n      \"endDate\": \"YYYY-MM\" o \"presente\",\n      \"description\": \"Descripción de responsabilidades y logros\",\n      \"technologies\": [\"Tech1\", \"Tech2\"]\n    }\n  ],\n  \"education\": [\n    {\n      \"id\": 1,\n      \"institution\": \"Universidad/Institución\",\n      \"degree\": \"Título obtenido\",\n      \"startDate\": \"YYYY-MM\",\n      \"endDate\": \"YYYY-MM\" o \"presente\",\n      \"status\": \"Completado\" o \"En curso\"\n    }\n  ],\n  \"skills\": {\n    \"frontend\": [\"React\", \"JavaScript\"],\n    \"backend\": [\"Node.js\", \"Python\"],\n    \"database\": [\"SQL\", \"MongoDB\"],\n    \"cloud\": [\"AWS\", \"Firebase\"],\n    \"tools\": [\"Git\", \"Docker\"]\n  },\n  \"projects\": [\n    {\n      \"id\": 1,\n      \"name\": \"Nombre del proyecto\",\n      \"description\": \"Descripción breve\",\n      \"technologies\": [\"Tech1\", \"Tech2\"],\n      \"url\": \"https://proyecto.com\",\n      \"github\": \"https://github.com/usuario/repo\"\n    }\n  ],\n  \"certifications\": [\n    {\n      \"id\": 1,\n      \"name\": \"Nombre certificación\",\n      \"issuer\": \"Organización emisora\",\n      \"date\": \"YYYY-MM\",\n      \"url\": \"https://certificado.com\"\n    }\n  ]\n}\n```\n\n## Reglas importantes:\n1. Extrae SOLO información que esté explícitamente en el CV\n2. NO inventes datos que no estén presentes\n3. Usa fechas en formato YYYY-MM\n4. Clasifica skills en las categorías correctas\n5. Si falta información, usa arrays vacíos []\n6. Mantén descripciones concisas pero informativas\n7. Responde ÚNICAMENTE con el JSON válido, sin texto adicional\n\nLee TODO el contenido del PDF cargado y extrae información de todas las secciones. Si hay tablas o columnas, procesa toda la información manteniendo el orden cronológico.",
+          "chainOption": "stuff"
+        },
+        "outputAnchors": [
+          {
+            "id": "conversationalRetrievalQAChain_0-output-conversationalRetrievalQAChain-ConversationalRetrievalQAChain|BaseChain",
+            "name": "conversationalRetrievalQAChain",
+            "label": "ConversationalRetrievalQAChain",
+            "description": "Document QA - built on RetrievalQAChain to provide a chat history component",
+            "type": "ConversationalRetrievalQAChain | BaseChain"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 526,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1100,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "memoryVectorStore_0",
+      "position": {
+        "x": 600,
+        "y": 900
+      },
+      "type": "customNode",
+      "data": {
+        "id": "memoryVectorStore_0",
+        "label": "In-Memory Vector Store",
+        "version": 1,
+        "name": "memoryVectorStore",
+        "type": "Memory",
+        "baseClasses": ["Memory", "VectorStoreRetriever", "BaseRetriever"],
+        "category": "Vector Stores",
+        "description": "In-memory vectorstore that stores embeddings and does an exact, linear search for the most similar embeddings.",
+        "inputParams": [
+          {
+            "label": "Top K",
+            "name": "topK",
+            "description": "Number of top results to fetch. Default to 4",
+            "placeholder": "4",
+            "type": "number",
+            "optional": true
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Document",
+            "name": "document",
+            "type": "Document"
+          },
+          {
+            "label": "Embeddings",
+            "name": "embeddings",
+            "type": "Embeddings"
+          }
+        ],
+        "inputs": {
+          "document": "{{pdfFile_0.data.instance}}",
+          "embeddings": "{{googleGenerativeAiEmbedding_0.data.instance}}",
+          "topK": "4"
+        },
+        "outputAnchors": [
+          {
+            "id": "memoryVectorStore_0-output-retriever-Memory|VectorStoreRetriever|BaseRetriever",
+            "name": "retriever",
+            "label": "Memory Vector Store Retriever",
+            "description": "In-memory vectorstore that stores embeddings and does an exact, linear search for the most similar embeddings.",
+            "type": "Memory | VectorStoreRetriever | BaseRetriever"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 405,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 600,
+        "y": 900
+      },
+      "dragging": false
+    },
+    {
+      "id": "googleGenerativeAiEmbedding_0",
+      "position": {
+        "x": 100,
+        "y": 900
+      },
+      "type": "customNode",
+      "data": {
+        "id": "googleGenerativeAiEmbedding_0",
+        "label": "GoogleGenerativeAI Embeddings",
+        "version": 2,
+        "name": "googleGenerativeAiEmbedding",
+        "type": "GoogleGenerativeAiEmbedding",
+        "baseClasses": ["GoogleGenerativeAiEmbedding", "Embeddings"],
+        "category": "Embeddings",
+        "description": "Google Generative AI Embeddings",
+        "inputParams": [
+          {
+            "label": "Connect Credential",
+            "name": "credential",
+            "type": "credential",
+            "credentialNames": ["googleGenerativeAI"]
+          },
+          {
+            "label": "Model Name",
+            "name": "modelName",
+            "type": "asyncOptions",
+            "loadMethod": "listEmbeddingModels",
+            "default": "embedding-001"
+          },
+          {
+            "label": "Strip New Lines",
+            "name": "stripNewLines",
+            "type": "boolean",
+            "optional": true,
+            "additionalParams": true
+          }
+        ],
+        "inputAnchors": [],
+        "inputs": {
+          "modelName": "text-embedding-004",
+          "stripNewLines": true
+        },
+        "outputAnchors": [
+          {
+            "id": "googleGenerativeAiEmbedding_0-output-googleGenerativeAiEmbedding-GoogleGenerativeAiEmbedding|Embeddings",
+            "name": "googleGenerativeAiEmbedding",
+            "label": "GoogleGenerativeAI Embeddings",
+            "description": "Google Generative AI Embeddings",
+            "type": "GoogleGenerativeAiEmbedding | Embeddings"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 405,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": 900
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "pdfFile_0",
+      "sourceHandle": "pdfFile_0-output-document-Document",
+      "target": "memoryVectorStore_0",
+      "targetHandle": "memoryVectorStore_0-input-document-Document",
+      "type": "buttonedge",
+      "id": "pdfFile_0-pdfFile_0-output-document-Document-memoryVectorStore_0-memoryVectorStore_0-input-document-Document"
+    },
+    {
+      "source": "googleGenerativeAiEmbedding_0",
+      "sourceHandle": "googleGenerativeAiEmbedding_0-output-googleGenerativeAiEmbedding-GoogleGenerativeAiEmbedding|Embeddings",
+      "target": "memoryVectorStore_0",
+      "targetHandle": "memoryVectorStore_0-input-embeddings-Embeddings",
+      "type": "buttonedge",
+      "id": "googleGenerativeAiEmbedding_0-googleGenerativeAiEmbedding_0-output-googleGenerativeAiEmbedding-GoogleGenerativeAiEmbedding|Embeddings-memoryVectorStore_0-memoryVectorStore_0-input-embeddings-Embeddings"
+    },
+    {
+      "source": "chatGoogleGenerativeAI_0",
+      "sourceHandle": "chatGoogleGenerativeAI_0-output-chatGoogleGenerativeAI-ChatGoogleGenerativeAI|BaseChatModel|BaseLanguageModel",
+      "target": "conversationalRetrievalQAChain_0",
+      "targetHandle": "conversationalRetrievalQAChain_0-input-model-BaseChatModel",
+      "type": "buttonedge",
+      "id": "chatGoogleGenerativeAI_0-chatGoogleGenerativeAI_0-output-chatGoogleGenerativeAI-ChatGoogleGenerativeAI|BaseChatModel|BaseLanguageModel-conversationalRetrievalQAChain_0-conversationalRetrievalQAChain_0-input-model-BaseChatModel"
+    },
+    {
+      "source": "memoryVectorStore_0",
+      "sourceHandle": "memoryVectorStore_0-output-retriever-Memory|VectorStoreRetriever|BaseRetriever",
+      "target": "conversationalRetrievalQAChain_0",
+      "targetHandle": "conversationalRetrievalQAChain_0-input-vectorStoreRetriever-BaseRetriever",
+      "type": "buttonedge",
+      "id": "memoryVectorStore_0-memoryVectorStore_0-output-retriever-Memory|VectorStoreRetriever|BaseRetriever-conversationalRetrievalQAChain_0-conversationalRetrievalQAChain_0-input-vectorStoreRetriever-BaseRetriever"
+    }
+  ]
+}

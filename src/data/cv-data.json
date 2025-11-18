@@ -1,0 +1,119 @@
+{
+  "personal": {
+    "name": "ANDRÉS ALMEIDA",
+    "title": "Analista de Datos y Negocio",
+    "email": "soyandresalmeida@gmail.com",
+    "phone": "(+34) 633-084828",
+    "location": "Madrid",
+    "summary": "Analista de Datos y Negocio con base financiera y experiencia en banca y seguros. Especializado en estructurar información compleja, mejorar la calidad del dato y elaborar reportes ejecutivos para comités. Combino BI, análisis financiero y automatización con una visión estratégica orientada a la toma de decisiones. Experiencia con Power BI, SQL, R y procesos reproducibles para diagnóstico, integración y limpieza de datos."
+  },
+  "experience": [
+    {
+      "id": 1,
+      "company": "Banesco Seguros",
+      "position": "Especialista de Control y Gestión del Dato",
+      "startDate": "2025",
+      "endDate": "2025",
+      "description": "Automatización de reportes actuariales y financieros en R, mejorando consistencia y tiempos de entrega. Desarrollo de dashboards estratégicos en Power BI integrando costos, ventas y reservas. Diagnóstico de fallas estructurales en la arquitectura de datos y propuestas de mejora de gobernanza. Estandarización de definiciones y criterios analíticos entre áreas actuariales y gerenciales.",
+      "technologies": ["R", "Power BI"]
+    },
+    {
+      "id": 2,
+      "company": "Banesco Banco Universal",
+      "position": "Analista de Crédito",
+      "startDate": "2024",
+      "endDate": "2025",
+      "description": "Análisis de riesgo crediticio con flujos de caja, métricas financieras y reclasificación contable. Elaboración y defensa técnica de expedientes ante el Comité Ejecutivo de Crédito. Integración del análisis técnico con necesidades comerciales y contexto macroeconómico. Evaluación de clientes corporativos usando EBITDA, liquidez, rotaciones y flujo operativo.",
+      "technologies": []
+    }
+  ],
+  "education": [
+    {
+      "id": 1,
+      "institution": "EUDE Business School",
+      "degree": "MBA",
+      "startDate": "2025",
+      "endDate": "presente",
+      "status": "En curso"
+    },
+    {
+      "id": 2,
+      "institution": "EUDE Business School",
+      "degree": "Máster en Business Intelligence y Big Data Analytics",
+      "startDate": "2024",
+      "endDate": "2025",
+      "status": "Completado"
+    },
+    {
+      "id": 3,
+      "institution": "Universidad Católica Andrés Bello",
+      "degree": "Economía",
+      "startDate": "2018",
+      "endDate": "2024",
+      "status": "Completado"
+    },
+    {
+      "id": 4,
+      "institution": "Universidad Católica Andrés Bello",
+      "degree": "Ingeniería Informática (5 semestres)",
+      "startDate": "2015",
+      "endDate": "2018",
+      "status": "Incompleto"
+    }
+  ],
+  "skills": {
+    "frontend": [],
+    "backend": ["R (tidyverse)", "Python"],
+    "database": ["SQL (TOAD/Oracle)"],
+    "cloud": [],
+    "tools": ["Power BI (modelado, DAX)", "Análisis de flujos de caja", "Análisis de estados financieros", "Análisis de riesgo", "Automatización low-code"]
+  },
+  "projects": [
+    {
+      "id": 1,
+      "name": "Mi Portafolio",
+      "description": "Portafolio personal con chatbot integrado usando Flowise y Gemini",
+      "technologies": ["React", "TypeScript", "Tailwind", "Firebase", "Flowise"],
+      "url": "https://andresalmeida-portafolio.web.app",
+      "github": "https://github.com/usuario/miportafolio"
+    }
+  ],
+  "certifications": [
+    {
+      "id": 1,
+      "name": "MBA",
+      "issuer": "EUDE Business School",
+      "date": "2025 - En curso",
+      "description": "Programa de Maestría en Administración de Empresas con enfoque en gestión estratégica y liderazgo empresarial",
+      "credentialId": "MBA-2025",
+      "url": ""
+    },
+    {
+      "id": 2,
+      "name": "Máster en Business Intelligence y Big Data Analytics",
+      "issuer": "EUDE Business School",
+      "date": "2024-2025",
+      "description": "Programa completo en BI, análisis de datos, Power BI, SQL y herramientas de Big Data para la toma de decisiones empresariales",
+      "credentialId": "MBI-2024",
+      "url": ""
+    },
+    {
+      "id": 3,
+      "name": "Licenciatura en Economía",
+      "issuer": "Universidad Católica Andrés Bello (UCAB)",
+      "date": "2018-2024",
+      "description": "Formación sólida en economía con enfoque en análisis cuantitativo, finanzas y políticas públicas",
+      "credentialId": "ECO-2024",
+      "url": ""
+    },
+    {
+      "id": 4,
+      "name": "Ingeniería Informática (5 semestres)",
+      "issuer": "Universidad Católica Andrés Bello (UCAB)",
+      "date": "2015-2018",
+      "description": "Fundamentos de programación, estructuras de datos y pensamiento lógico aplicados a la analítica",
+      "credentialId": "ING-2018",
+      "url": ""
+    }
+  ]
+}

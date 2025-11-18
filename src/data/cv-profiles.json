@@ -1,0 +1,49 @@
+{
+  "profiles": {
+    "MASTER": {
+      "title": "Analista Híbrido de Datos y Negocio",
+      "description": "Analista híbrido de Datos y Negocio con base financiera y experiencia en banca y seguros. Transformo datos fragmentados en información confiable para comités ejecutivos mediante BI, análisis financiero y automatización. Manejo de Power BI, SQL, R y herramientas low-code para reportería, validación del dato y prototipado analítico.",
+      "keywords": ["business intelligence", "datos", "análisis", "ejecutivo", "reportería"],
+      "skills_focus": ["Power BI", "SQL", "R", "Análisis Financiero", "Automatización"]
+    },
+    "BI": {
+      "title": "Analista de Business Intelligence",
+      "description": "Analista de Business Intelligence con experiencia en modelado de datos, reportería ejecutiva, dashboards estratégicos y definición de KPIs. Capacidad para estructurar información dispersa, mejorar calidad del dato y automatizar procesos con SQL, R y Power BI.",
+      "keywords": ["business intelligence", "power bi", "dashboards", "kpis", "reportería"],
+      "skills_focus": ["Power BI", "DAX", "SQL", "Dashboards", "KPIs"]
+    },
+    "DATA": {
+      "title": "Analista de Datos",
+      "description": "Analista de Datos orientado a limpieza, validación, transformación, integración y análisis de datasets complejos. Manejo de SQL, R (tidyverse), automatización low-code e IA aplicada para convertir datos crudos en insights claros.",
+      "keywords": ["datos", "sql", "python", "análisis", "machine learning"],
+      "skills_focus": ["SQL", "R", "Python", "Data Cleaning", "Analytics"]
+    },
+    "FINANZAS": {
+      "title": "Analista Financiero",
+      "description": "Analista Financiero con especialización en riesgo crediticio, análisis de estados financieros, flujos de caja y KPIs corporativos. Integración de BI (Power BI, SQL, R) para preparar reportes estratégicos y análisis técnicos para comités ejecutivos.",
+      "keywords": ["finanzas", "riesgo", "crédito", "análisis financiero", "banca"],
+      "skills_focus": ["Análisis Financiero", "Riesgo Crediticio", "Power BI", "KPIs Financieros"]
+    },
+    "CONSULTOR": {
+      "title": "Consultor de Soluciones Digitales",
+      "description": "Consultor de soluciones digitales orientado a resultados. Ayudo a profesionales, emprendedores y pequeñas empresas a transformar ideas en herramientas reales mediante IA generativa, automatización low-code y análisis de datos. Desarrollo asistentes conversacionales, dashboards ejecutivos, flujos automáticos y webs funcionales sin necesidad de infraestructura compleja.\n\nExperiencia combinada en economía, BI y trading (criptoactivos, futuros, indicadores técnicos y metodologías como Wyckoff). Capacidad para interpretar datos desde una perspectiva estratégica y convertirlos en decisiones accionables. Si necesitas claridad, automatización o una solución rápida y funcional, yo te la construyo.",
+      "keywords": ["consultoría", "ia", "automatización", "soluciones digitales", "chatbots"],
+      "skills_focus": ["IA Generativa", "Automatización", "Chatbots", "Trading", "Soluciones Digitales"]
+    }
+  },
+  "user_detection": {
+    "recruiter_patterns": [
+      "empresa", "puesto", "requisitos", "experiencia en", "conocimientos de",
+      "buscamos", "perfil", "candidato", "entrevista", "proceso de selección",
+      "salario", "disponibilidad", "incorporación", "equipo", "proyecto"
+    ],
+    "casual_patterns": [
+      "hola", "qué tal", "cuéntame", "interesante", "impresionante",
+      "cómo", "por qué", "curiosidad", "me gusta", "genial"
+    ],
+    "technical_patterns": [
+      "power bi", "sql", "python", "r", "datos", "análisis", "dashboard",
+      "kpi", "base de datos", "automatización", "ia", "machine learning"
+    ]
+  }
+}
