@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
-import cvData from '../data/cv-data.json';
 import { translateDynamicContent } from '../utils/dynamicTranslations';
-import { useFirebaseErrorHandler } from '../utils/firebaseErrorHandler';
+import { getFirebaseData, initializeFirebaseData } from '../utils/fullFirebaseManager';
 
 interface Project {
   id?: string;
-  name: string;
+  name?: string;
+  title?: string;
   description: string;
   technologies: string[];
   url?: string;
   github?: string;
+  liveUrl?: string;
+  githubUrl?: string;
   imageUrl?: string;
   status?: 'completed' | 'in-progress' | 'planned';
 }
@@ -24,39 +24,29 @@ interface ProjectsSectionProps {
 export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const { handleError } = useFirebaseErrorHandler();
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        // Obtener proyectos de Firebase
-        const querySnapshot = await getDocs(collection(db, 'projects'));
-        const firebaseProjects = querySnapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
-        } as Project));
-
-        // Combinar con proyectos del JSON
-        const jsonProjects = cvData.projects || [];
-        
-        // Unir ambas fuentes y traducir
-        const allProjects = [...firebaseProjects, ...jsonProjects].map(project => 
+        await initializeFirebaseData();
+        const firebaseProjects = await getFirebaseData('projects') as Project[];
+        const translatedProjects = firebaseProjects.map(project =>
           translateDynamicContent(project, language)
         );
-        setProjects(allProjects);
+        setProjects(translatedProjects);
       } catch (error) {
-        const fallbackProjects = handleError(error, cvData.projects || []);
-        setProjects(fallbackProjects.map(project => translateDynamicContent(project, language)));
+        console.error('Error cargando proyectos:', error);
+        setProjects([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjects();
-  }, [language]); // Re-fetch cuando cambia el idioma para aplicar traducciones
+  }, [language]);
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'in-progress': return 'bg-yellow-100 text-yellow-800';
       case 'planned': return 'bg-blue-100 text-blue-800';
@@ -65,7 +55,7 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
   };
 
   const getStatusLabel = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'completed': return t?.projects?.completed || 'Completado';
       case 'in-progress': return t?.projects?.inProgress || 'En Progreso';
       case 'planned': return t?.projects?.planned || 'Planeado';
@@ -75,7 +65,7 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
 
   if (loading) {
     return (
-      <section className="py-20 bg-gray-50">
+      <section className="py-20">
         <div className="container mx-auto px-6 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t?.projects?.loading || 'Cargando proyectos...'}</p>
@@ -85,7 +75,7 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
   }
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -106,18 +96,18 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
               <div key={project.id || index} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                 {project.imageUrl && (
                   <div className="h-48 bg-gradient-to-br from-blue-500 to-purple-600 relative overflow-hidden">
-                    <img 
-                      src={project.imageUrl} 
+                    <img
+                      src={project.imageUrl}
                       alt={project.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                 )}
-                
+
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {project.name}
+                      {project.title || project.name || 'Proyecto sin título'}
                     </h3>
                     {project.status && (
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
@@ -125,16 +115,16 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
                       </span>
                     )}
                   </div>
-                  
+
                   <p className="text-gray-600 mb-4 line-clamp-3">
                     {project.description}
                   </p>
-                  
+
                   {project.technologies && project.technologies.length > 0 && (
                     <div className="mb-6">
                       <div className="flex flex-wrap gap-2">
                         {project.technologies.map((tech, techIndex) => (
-                          <span 
+                          <span
                             key={techIndex}
                             className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm"
                           >
@@ -144,24 +134,24 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex space-x-3">
-                    {project.url && (
-                      <a 
-                        href={project.url}
+                    {(project.url || project.liveUrl) && (
+                      <a
+                        href={project.url || project.liveUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        className={`${(project.github || project.githubUrl) ? 'flex-1' : 'w-full'} bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium`}
                       >
                         {t?.projects?.viewLive || 'Ver Proyecto'}
                       </a>
                     )}
-                    {project.github && (
-                      <a 
-                        href={project.github}
+                    {(project.github || project.githubUrl) && (
+                      <a
+                        href={project.github || project.githubUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 bg-gray-800 text-white text-center py-2 px-4 rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium"
+                        className={`${(project.url || project.liveUrl) ? 'flex-1' : 'w-full'} bg-gray-800 text-white text-center py-2 px-4 rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium`}
                       >
                         GitHub
                       </a>
@@ -182,7 +172,7 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
             <p className="text-lg mb-6 opacity-90">
               {t?.projects?.cta?.subtitle || 'Conversemos sobre cómo puedo ayudarte a llevarlo a cabo'}
             </p>
-            <a 
+            <a
               href="#contact"
               className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block"
             >

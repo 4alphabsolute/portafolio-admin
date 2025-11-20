@@ -4,7 +4,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import emailjs from 'emailjs-com';
 import { useFirebaseErrorHandler } from '../utils/firebaseErrorHandler';
 import { Mail, Phone, Linkedin, Instagram } from 'lucide-react';
-import { translateDynamicContent } from '../utils/dynamicTranslations';
+
 
 interface FormData {
   name: string;
@@ -37,9 +37,9 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
         { title: 'Soluciones a medida', desc: 'Desde análisis financiero hasta chatbots con IA, creo herramientas que resuelven problemas reales' }
       ],
       form: {
-        name: 'Nombre *', email: 'Email *', company: 'Empresa', 
+        name: 'Nombre *', email: 'Email *', company: 'Empresa',
         projectType: 'Tipo de proyecto *', message: 'Cuéntame sobre tu proyecto *',
-        submit: 'Enviar mensaje', success: '¡Mensaje enviado!', 
+        submit: 'Enviar mensaje', success: '¡Mensaje enviado!',
         successDesc: 'Te responderé en menos de 24 horas para discutir tu proyecto.',
         another: 'Enviar otro mensaje'
       },
@@ -62,9 +62,9 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
         { title: 'Custom solutions', desc: 'From financial analysis to AI chatbots, I create tools that solve real problems' }
       ],
       form: {
-        name: 'Name *', email: 'Email *', company: 'Company', 
+        name: 'Name *', email: 'Email *', company: 'Company',
         projectType: 'Project type *', message: 'Tell me about your project *',
-        submit: 'Send message', success: 'Message sent!', 
+        submit: 'Send message', success: 'Message sent!',
         successDesc: 'I\'ll respond within 24 hours to discuss your project.',
         another: 'Send another message'
       },
@@ -153,21 +153,21 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
 
   if (isSubmitted) {
     return (
-      <section id="contact" className="py-20 bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900">
+      <section id="contact" className="py-20">
         <div className="container mx-auto px-6 text-center">
           <div className="max-w-2xl mx-auto bg-white rounded-2xl p-12 shadow-2xl">
             <div className="text-6xl mb-6">✅</div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">{content.form.success}</h2>
             <p className="text-lg text-gray-600 mb-8">{content.form.successDesc}</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a 
+              <a
                 href="https://linkedin.com/in/soyandresalmeida"
                 target="_blank" rel="noopener noreferrer"
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 LinkedIn
               </a>
-              <button 
+              <button
                 onClick={() => setIsSubmitted(false)}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
@@ -181,11 +181,11 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
   }
 
   return (
-    <section id="contact" className="py-20 bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900">
+    <section id="contact" className="py-20">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            
+
             {/* Value Proposition */}
             <div className="text-white">
               <h2 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
@@ -193,7 +193,7 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
                 <span className="text-yellow-400">decisiones estratégicas</span>
                 {content.title.split('decisiones estratégicas')[1]}
               </h2>
-              
+
               <div className="space-y-6 mb-8">
                 {content.benefits.map((benefit, i) => (
                   <div key={i} className="flex items-start space-x-4">
@@ -209,17 +209,17 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
                   </div>
                 ))}
               </div>
-              
+
               <div className="bg-blue-800/50 rounded-xl p-6 backdrop-blur-sm">
                 <p className="text-lg font-medium mb-2">⚡ Respuesta rápida garantizada</p>
                 <p className="text-blue-100">Te contacto en menos de 24 horas</p>
               </div>
             </div>
-            
+
             {/* Contact Form */}
             <div className="bg-white rounded-2xl p-8 shadow-2xl">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">{content.subtitle}</h3>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
@@ -239,7 +239,7 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">{content.form.company}</label>
                   <input
@@ -248,7 +248,7 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
                     placeholder="Nombre de tu empresa"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">{content.form.projectType}</label>
                   <select
@@ -261,7 +261,7 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">{content.form.message}</label>
                   <textarea
@@ -270,7 +270,7 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
                     placeholder="Describe tu desafío, objetivos y cómo puedo ayudarte..."
                   />
                 </div>
-                
+
                 <button
                   type="submit" disabled={isSubmitting}
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50"
@@ -278,14 +278,14 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
                   {isSubmitting ? 'Enviando...' : content.form.submit}
                 </button>
               </form>
-              
+
               {/* Contact Info */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <p className="text-sm text-gray-600 mb-4 text-center">O contáctame directamente:</p>
                 <div className="grid grid-cols-2 gap-4">
                   {contactInfo.map((item, i) => (
                     <a key={i} href={item.link} target={item.link.startsWith('http') ? '_blank' : undefined}
-                       className="flex items-center text-gray-600 hover:text-blue-600 transition-colors text-sm">
+                      className="flex items-center text-gray-600 hover:text-blue-600 transition-colors text-sm">
                       {item.icon}
                       <span className="ml-2">{item.label}</span>
                     </a>

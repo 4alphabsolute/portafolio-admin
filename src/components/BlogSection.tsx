@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 
 interface BlogPost {
   title: string;
@@ -27,7 +27,7 @@ export default function BlogSection() {
       title: "5 errores comunes en Power BI que cuestan dinero a las empresas",
       excerpt: "Basado en mi experiencia en Banesco, analizo los errores más frecuentes en implementaciones de BI y cómo evitarlos para maximizar el ROI.",
       date: "Próximamente",
-      readTime: "6 min", 
+      readTime: "6 min",
       category: "Business Intelligence",
       status: "coming-soon",
       image: "📊"
@@ -38,7 +38,7 @@ export default function BlogSection() {
       date: "Próximamente",
       readTime: "10 min",
       category: "Automatización",
-      status: "coming-soon", 
+      status: "coming-soon",
       image: "⚡"
     },
     {
@@ -53,7 +53,7 @@ export default function BlogSection() {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -81,22 +81,22 @@ export default function BlogSection() {
                     )}
                   </div>
                 </div>
-                
+
                 <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">
                   {post.title}
                 </h3>
-                
+
                 <p className="text-gray-600 mb-4 leading-relaxed">
                   {post.excerpt}
                 </p>
-                
+
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
                   <span>{post.date}</span>
                   <span>{post.readTime} lectura</span>
                 </div>
-                
+
                 {post.status === 'published' && post.linkedinUrl ? (
-                  <a 
+                  <a
                     href={post.linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -108,7 +108,7 @@ export default function BlogSection() {
                     </svg>
                   </a>
                 ) : (
-                  <button 
+                  <button
                     disabled
                     className="inline-flex items-center px-6 py-3 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium"
                   >
@@ -132,7 +132,7 @@ export default function BlogSection() {
             <p className="text-lg text-gray-600 mb-6">
               Sígueme en LinkedIn para recibir mis artículos sobre análisis de datos y BI
             </p>
-            <a 
+            <a
               href="https://linkedin.com/in/soyandresalmeida"
               target="_blank"
               rel="noopener noreferrer"

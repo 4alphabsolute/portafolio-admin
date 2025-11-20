@@ -13,7 +13,7 @@ export default function About({ t }: AboutProps) {
   ];
 
   return (
-    <section id="about" className="py-20 bg-white">
+    <section id="about" className="py-20 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
           {t.about.title}
@@ -33,7 +33,7 @@ export default function About({ t }: AboutProps) {
             {skills.map((skill, index) => (
               <div
                 key={index}
-                className="flex flex-col items-center justify-center p-6 bg-blue-50 rounded-lg hover:bg-blue-100 transition transform hover:scale-105"
+                className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl shadow-sm hover:shadow-md hover:from-blue-100 hover:to-blue-200/50 transition-all duration-300 transform hover:scale-105"
               >
                 <div className="text-[#0A66C2] mb-3">
                   {skill.icon}

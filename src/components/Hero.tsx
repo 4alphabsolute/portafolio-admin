@@ -5,7 +5,7 @@ interface HeroProps {
   language: 'es' | 'en';
 }
 
-export default function Hero({ t, language }: HeroProps) {
+export default function Hero({ t }: HeroProps) {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -13,21 +13,10 @@ export default function Hero({ t, language }: HeroProps) {
     }
   };
 
-  const cvLinks = {
-    es: "https://drive.google.com/uc?export=download&id=1mDiLw1H1DX0xEjdpSxjYKEHXm1uELkXb",
-    en: "https://drive.google.com/uc?export=download&id=1wZ_gwFfx4Vntke-aLZOxLllQL0k6C7HX",
-  };
-
   return (
     <section
       id="home"
-      className="min-h-screen flex flex-col justify-center items-center pt-20 px-6 text-center"
-      style={{
-        backgroundImage: "url('images/HeroBar.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
+      className="min-h-screen flex flex-col justify-center items-center pt-20 px-6 text-center relative"
     >
       {/* Contenido principal */}
       <div className="animate-fade-in flex flex-col items-center space-y-6 max-w-3xl">
@@ -55,15 +44,16 @@ export default function Hero({ t, language }: HeroProps) {
         </p>
 
         {/* Botón */}
-        <a
-          href={cvLinks[language]}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => {
+            const chatButton = document.querySelector('[data-chat-button]') as HTMLButtonElement;
+            if (chatButton) chatButton.click();
+          }}
           className="inline-flex items-center gap-2 bg-[#0A66C2] text-white px-7 py-3 rounded-lg text-lg font-semibold hover:bg-[#094a8f] transition transform hover:scale-105"
         >
           <Download size={20} />
           {t.hero.downloadCV}
-        </a>
+        </button>
       </div>
 
       {/* Flecha — SIEMPRE centrada */}

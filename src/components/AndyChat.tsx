@@ -24,14 +24,14 @@ export default function AndyChat() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile>({ 
-    type: 'unknown', 
-    confidence: 0, 
-    language: 'es', 
-    messageCount: 0, 
-    lastMessageTime: 0, 
-    warningCount: 0, 
-    isBlocked: false 
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    type: 'unknown',
+    confidence: 0,
+    language: 'es',
+    messageCount: 0,
+    lastMessageTime: 0,
+    warningCount: 0,
+    isBlocked: false
   });
   const [conversationContext, setConversationContext] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
@@ -41,18 +41,18 @@ export default function AndyChat() {
   const detectLanguage = (text: string): 'es' | 'en' => {
     const lowerText = text.toLowerCase();
     const { en, es } = personalityConfig.languages.detection_keywords;
-    
+
     let enScore = 0;
     let esScore = 0;
-    
+
     en.forEach(keyword => {
       if (lowerText.includes(keyword)) enScore++;
     });
-    
+
     es.forEach(keyword => {
       if (lowerText.includes(keyword)) esScore++;
     });
-    
+
     return enScore > esScore ? 'en' : 'es';
   };
 
@@ -61,24 +61,24 @@ export default function AndyChat() {
     const lowerText = text.toLowerCase();
     const now = Date.now();
     const { spam_patterns, inappropriate_patterns, repetitive_threshold, max_messages_per_minute } = personalityConfig.anti_troll;
-    
+
     // Verificar spam patterns
     const hasSpam = spam_patterns.some(pattern => lowerText.includes(pattern));
     const hasInappropriate = inappropriate_patterns.some(pattern => lowerText.includes(pattern));
-    
+
     // Verificar rate limiting
     const timeDiff = now - currentProfile.lastMessageTime;
     const isRateLimited = timeDiff < (60000 / max_messages_per_minute); // 60000ms / max_per_minute
-    
+
     // Verificar mensajes repetitivos
     const recentMessages = messageHistory.slice(-repetitive_threshold);
-    const isRepetitive = recentMessages.length >= repetitive_threshold && 
-                        recentMessages.every(msg => msg.toLowerCase() === lowerText);
-    
+    const isRepetitive = recentMessages.length >= repetitive_threshold &&
+      recentMessages.every(msg => msg.toLowerCase() === lowerText);
+
     const isTroll = hasSpam || hasInappropriate || isRateLimited || isRepetitive;
     const shouldWarn = isTroll && currentProfile.warningCount < 2;
     const shouldBlock = isTroll && currentProfile.warningCount >= 2;
-    
+
     return { isTroll, shouldWarn, shouldBlock };
   };
 
@@ -88,27 +88,27 @@ export default function AndyChat() {
     const { recruiter_patterns, casual_patterns, technical_patterns } = cvProfiles.user_detection;
     const detectedLang = detectLanguage(text);
     const now = Date.now();
-    
+
     let recruiterScore = 0;
     let casualScore = 0;
     let technicalScore = 0;
-    
+
     recruiter_patterns.forEach(pattern => {
       if (lowerText.includes(pattern)) recruiterScore++;
     });
-    
+
     casual_patterns.forEach(pattern => {
       if (lowerText.includes(pattern)) casualScore++;
     });
-    
+
     technical_patterns.forEach(pattern => {
       if (lowerText.includes(pattern)) technicalScore++;
     });
-    
+
     const maxScore = Math.max(recruiterScore, casualScore, technicalScore);
     let type: UserProfile['type'] = 'unknown';
     let confidence = 0;
-    
+
     if (maxScore > 0) {
       if (recruiterScore === maxScore) {
         type = 'recruiter';
@@ -121,7 +121,7 @@ export default function AndyChat() {
         confidence = casualScore / casual_patterns.length;
       }
     }
-    
+
     return {
       ...currentProfile,
       type: confidence > currentProfile.confidence ? type : currentProfile.type,
@@ -135,7 +135,7 @@ export default function AndyChat() {
   // Generar preguntas proactivas
   const generateProactiveQuestion = (userType: UserProfile['type'], language: 'es' | 'en'): string => {
     const { proactive_questions } = personalityConfig;
-    
+
     if (language === 'en') {
       // Versiones en inglés de las preguntas
       switch (userType) {
@@ -149,7 +149,7 @@ export default function AndyChat() {
           return "Hello! I'm curious to know what brought you here. Are you from a particular company, or just exploring?";
       }
     }
-    
+
     // Versiones en español
     switch (userType) {
       case 'recruiter':
@@ -170,15 +170,15 @@ export default function AndyChat() {
   // Sugerir perfil CV basado en conversación
   const suggestCVProfile = (context: string[]): string => {
     const fullContext = context.join(' ').toLowerCase();
-    
+
     for (const [key, profile] of Object.entries(cvProfiles.profiles)) {
-      const matches = profile.keywords.filter(keyword => 
+      const matches = profile.keywords.filter(keyword =>
         fullContext.includes(keyword.toLowerCase())
       ).length;
-      
+
       if (matches >= 2) return key;
     }
-    
+
     return 'MASTER'; // Default
   };
 
@@ -186,16 +186,16 @@ export default function AndyChat() {
   const generateDynamicCV = async (profileType: string) => {
     const profile = cvProfiles.profiles[profileType as keyof typeof cvProfiles.profiles];
     if (!profile) return;
-    
+
     try {
       const { generateDynamicCV: generatePDF } = await import('../utils/pdfGenerator');
       generatePDF(profileType as keyof typeof cvProfiles.profiles, userProfile.language);
-      
+
       // Agregar mensaje del bot confirmando la descarga
       const confirmMessage = userProfile.language === 'en' ?
         `Perfect! I've generated your personalized CV for the "${profile.title}" profile. The PDF file has been downloaded automatically.\n\nWould you like me to adjust something specific or generate another profile?` :
         `¡Perfecto! He generado tu CV personalizado para el perfil "${profile.title}". El archivo PDF se ha descargado automáticamente.\n\n¿Te gustaría que ajuste algo específico o genere otro perfil?`;
-      
+
       setMessages(m => [...m, {
         from: 'bot',
         text: confirmMessage
@@ -205,7 +205,7 @@ export default function AndyChat() {
       const errorMessage = userProfile.language === 'en' ?
         'Sorry, there was a problem generating the PDF. As an alternative, I can send you my information via email or LinkedIn.' :
         'Disculpa, hubo un problema generando el PDF. Como alternativa, puedo enviarte mi información por email o LinkedIn.';
-      
+
       setMessages(m => [...m, {
         from: 'bot',
         text: errorMessage
@@ -224,64 +224,64 @@ export default function AndyChat() {
     setInput('');
 
     setSending(true);
-    
+
     try {
       const genAI = new GoogleGenerativeAI('AIzaSyDBcGIh9f7ehSZDZyct9e9b4JqaqqmACV0');
       const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
       // Sistema anti-troll
       const trollCheck = checkForTroll(question, userProfile);
-      
+
       if (trollCheck.shouldBlock) {
         setUserProfile(prev => ({ ...prev, isBlocked: true }));
-        setMessages(m => [...m, { 
-          from: 'bot', 
-          text: personalityConfig.anti_troll.block_message 
+        setMessages(m => [...m, {
+          from: 'bot',
+          text: personalityConfig.anti_troll.block_message
         }]);
         setSending(false);
         return;
       }
-      
+
       if (trollCheck.shouldWarn) {
         setUserProfile(prev => ({ ...prev, warningCount: prev.warningCount + 1 }));
-        setMessages(m => [...m, { 
-          from: 'bot', 
-          text: personalityConfig.anti_troll.warning_message 
+        setMessages(m => [...m, {
+          from: 'bot',
+          text: personalityConfig.anti_troll.warning_message
         }]);
         setSending(false);
         return;
       }
-      
+
       // Actualizar historial de mensajes
       setMessageHistory(prev => [...prev, question].slice(-10));
-      
+
       // Actualizar contexto y perfil de usuario
       const newContext = [...conversationContext, question].slice(-10);
       setConversationContext(newContext);
-      
+
       const detectedProfile = detectUserType(question, userProfile);
       setUserProfile(detectedProfile);
-      
+
       const suggestedCV = suggestCVProfile(newContext);
-      
+
       // Generar pregunta proactiva
       const proactiveQuestion = generateProactiveQuestion(detectedProfile.type, detectedProfile.language);
-      
+
       let contextualPrompt = '';
       if (detectedProfile.type === 'recruiter') {
-        contextualPrompt = detectedProfile.language === 'en' ? 
+        contextualPrompt = detectedProfile.language === 'en' ?
           `\n\nNOTE: I detected you're a recruiter. I can generate a specific CV for your search. ${proactiveQuestion}` :
           `\n\nNOTA: Detecté que eres un reclutador. ${proactiveQuestion}`;
       } else if (detectedProfile.type === 'technical') {
-        contextualPrompt = detectedProfile.language === 'en' ? 
+        contextualPrompt = detectedProfile.language === 'en' ?
           `\n\nNOTE: I see you have technical interest. ${proactiveQuestion}` :
           `\n\nNOTA: ${proactiveQuestion}`;
       } else if (detectedProfile.messageCount === 1) {
         // Primera interacción - ser proactivo
         contextualPrompt = `\n\nPREGUNTA PROACTIVA: ${proactiveQuestion}`;
       }
-      
-      const basePrompt = detectedProfile.language === 'en' ? 
+
+      const basePrompt = detectedProfile.language === 'en' ?
         `You are Andrés Almeida responding in first person as an experienced professional.
 
 MY COMPLETE PROFILE:
@@ -327,19 +327,19 @@ CONTEXTO DEL USUARIO:
 RESPONDE COMO YO con ejemplos técnicos específicos. Si es un reclutador, sé más directo sobre resultados y logros. Si preguntan sobre CV o descargas, menciona que puedo generar un CV personalizado.
 
 Pregunta: ${question}`;
-      
+
       const prompt = basePrompt + contextualPrompt;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-      
+
       setMessages((m) => [...m, { from: 'bot', text }]);
     } catch (error) {
       console.error('Gemini error:', error);
-      setMessages((m) => [...m, { 
-        from: 'bot', 
-        text: 'Disculpa, tengo problemas técnicos. Como Analista de Datos, puedo contarte que trabajo con Power BI, R y análisis financiero en Banesco. ¿Qué te interesa saber específicamente?' 
+      setMessages((m) => [...m, {
+        from: 'bot',
+        text: 'Disculpa, tengo problemas técnicos. Como Analista de Datos, puedo contarte que trabajo con Power BI, R y análisis financiero en Banesco. ¿Qué te interesa saber específicamente?'
       }]);
     } finally {
       setSending(false);
@@ -356,6 +356,7 @@ Pregunta: ${question}`;
     <>
       <div className="fixed bottom-6 right-6 z-50">
         <button
+          data-chat-button
           onClick={() => setOpen((v) => !v)}
           className="bg-gradient-to-r from-[#0A66C2] to-[#0052A3] text-white rounded-full p-4 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
         >
@@ -369,8 +370,9 @@ Pregunta: ${question}`;
               </>
             ) : (
               <>
-                <span className="text-xl">🤖</span>
+                <span className="text-xl animate-pulse">🤖</span>
                 <span className="text-sm font-medium">AndyChat</span>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
               </>
             )}
           </div>
@@ -400,7 +402,7 @@ Pregunta: ${question}`;
                 <p className="font-medium">¡Hola! Soy AndyBot</p>
                 <p className="text-sm">Pregúntame sobre la experiencia,</p>
                 <p className="text-sm">habilidades y proyectos de Andrés</p>
-                
+
                 {/* Botones de CV rápido */}
                 <div className="mt-4 space-y-2">
                   <p className="text-xs font-medium text-gray-600">CV Personalizado:</p>
@@ -412,11 +414,11 @@ Pregunta: ${question}`;
                         className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors"
                         title={profile.description}
                       >
-                        {key === 'MASTER' ? 'Analista Híbrido' : 
-                         key === 'BI' ? 'Analista BI' :
-                         key === 'DATA' ? 'Analista de Datos' :
-                         key === 'FINANZAS' ? 'Analista Financiero' :
-                         'Consultor Digital'}
+                        {key === 'MASTER' ? 'Analista Híbrido' :
+                          key === 'BI' ? 'Analista BI' :
+                            key === 'DATA' ? 'Analista de Datos' :
+                              key === 'FINANZAS' ? 'Analista Financiero' :
+                                'Consultor Digital'}
                       </button>
                     ))}
                   </div>
@@ -425,47 +427,44 @@ Pregunta: ${question}`;
             )}
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-2xl shadow-sm ${
-                  m.from === 'user' 
-                    ? 'bg-[#0A66C2] text-white rounded-br-md' 
+                <div className={`max-w-[80%] p-3 rounded-2xl shadow-sm ${m.from === 'user'
+                    ? 'bg-[#0A66C2] text-white rounded-br-md'
                     : 'bg-white text-gray-800 rounded-bl-md border'
-                }`}>
-                  <div 
-                    className={`text-sm leading-relaxed prose prose-sm max-w-none ${
-                      m.from === 'user' ? 'prose-invert' : 'prose-gray'
-                    }`}
-                    dangerouslySetInnerHTML={{ 
-                      __html: marked(m.text, { 
+                  }`}>
+                  <div
+                    className={`text-sm leading-relaxed prose prose-sm max-w-none ${m.from === 'user' ? 'prose-invert' : 'prose-gray'
+                      }`}
+                    dangerouslySetInnerHTML={{
+                      __html: marked(m.text, {
                         breaks: true,
-                        gfm: true 
+                        gfm: true
                       }) as string
                     }}
                   />
-                  
+
                   {/* Mostrar botón de CV si el bot sugiere descarga */}
                   {m.from === 'bot' && (m.text.toLowerCase().includes('cv') || m.text.toLowerCase().includes('currículum')) && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
                       <p className="text-xs text-gray-500 mb-1">Generar CV personalizado:</p>
                       <div className="flex flex-wrap gap-1">
-                        {Object.entries(cvProfiles.profiles).slice(0, 3).map(([key, profile]) => (
+                        {Object.entries(cvProfiles.profiles).slice(0, 3).map(([key, _]) => (
                           <button
                             key={key}
                             onClick={() => generateDynamicCV(key)}
                             className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
                           >
-                            {key === 'MASTER' ? 'Híbrido' : 
-                             key === 'BI' ? 'BI' :
-                             key === 'DATA' ? 'Datos' :
-                             key === 'FINANZAS' ? 'Financiero' :
-                             'Consultor'}
+                            {key === 'MASTER' ? 'Híbrido' :
+                              key === 'BI' ? 'BI' :
+                                key === 'DATA' ? 'Datos' :
+                                  key === 'FINANZAS' ? 'Financiero' :
+                                    'Consultor'}
                           </button>
                         ))}
                       </div>
                     </div>
                   )}
-                  <div className={`text-xs mt-1 opacity-70 ${
-                    m.from === 'user' ? 'text-blue-100' : 'text-gray-500'
-                  }`}>
+                  <div className={`text-xs mt-1 opacity-70 ${m.from === 'user' ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
                     {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
@@ -477,8 +476,8 @@ Pregunta: ${question}`;
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                     <span className="text-xs text-gray-500">AndyBot está escribiendo...</span>
                   </div>
@@ -490,17 +489,17 @@ Pregunta: ${question}`;
           {/* Input */}
           <div className="p-4 bg-white border-t">
             <div className="flex gap-2">
-              <input 
-                value={input} 
+              <input
+                value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !sending && send()}
                 placeholder="Escribe tu mensaje..."
-                className="flex-1 border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent" 
-                disabled={sending} 
+                className="flex-1 border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                disabled={sending}
               />
-              <button 
-                onClick={send} 
-                className="bg-[#0A66C2] text-white p-3 rounded-xl hover:bg-[#0052A3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+              <button
+                onClick={send}
+                className="bg-[#0A66C2] text-white p-3 rounded-xl hover:bg-[#0052A3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={sending || !input.trim()}
               >
                 {sending ? (

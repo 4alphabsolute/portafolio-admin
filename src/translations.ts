@@ -10,7 +10,7 @@ export const translations = {
     hero: {
       title: 'Analista de Datos | Economista | BI & Big Data',
       tagline: 'Transformo datos en decisiones estratégicas',
-      downloadCV: 'Descargar CV',
+      downloadCV: 'Ver Dossier',
     },
     about: {
       title: 'Sobre mí',
@@ -124,7 +124,7 @@ export const translations = {
     hero: {
       title: 'Data Analyst | Economist | BI & Big Data',
       tagline: 'Turning data into strategic decisions',
-      downloadCV: 'Download CV',
+      downloadCV: 'View Dossier',
     },
     about: {
       title: 'About Me',

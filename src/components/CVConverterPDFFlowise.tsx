@@ -20,7 +20,7 @@ export default function CVConverterPDFFlowise() {
       setError('');
       setExtractedText('');
       setJsonResult('');
-      
+
       // Extraer texto automáticamente
       await extractTextFromPDF(selectedFile);
     } else {
@@ -32,7 +32,7 @@ export default function CVConverterPDFFlowise() {
     setExtracting(true);
     try {
       const arrayBuffer = await file.arrayBuffer();
-      
+
       // Configuración más robusta para PDFs de Overleaf
       const pdf = await pdfjsLib.getDocument({
         data: arrayBuffer,
@@ -40,17 +40,14 @@ export default function CVConverterPDFFlowise() {
         disableFontFace: false,
         verbosity: 0
       }).promise;
-      
+
       let fullText = '';
-      
+
       for (let i = 1; i <= pdf.numPages; i++) {
         try {
           const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent({
-            normalizeWhitespace: true,
-            disableCombineTextItems: false
-          });
-          
+          const textContent = await page.getTextContent();
+
           // Mejor procesamiento del texto
           const pageText = textContent.items
             .map((item: any) => {
@@ -61,7 +58,7 @@ export default function CVConverterPDFFlowise() {
             })
             .filter(text => text.length > 0)
             .join(' ');
-          
+
           if (pageText.trim()) {
             fullText += pageText + '\n\n';
           }
@@ -70,13 +67,13 @@ export default function CVConverterPDFFlowise() {
           // Continuar con las otras páginas
         }
       }
-      
+
       if (fullText.trim().length > 10) {
         setExtractedText(fullText.trim());
       } else {
         throw new Error('PDF parece estar vacío o ser una imagen. Intenta con el método manual.');
       }
-      
+
     } catch (err) {
       console.error('Error completo:', err);
       setError(`Error al leer PDF de Overleaf. Solución: Abre el PDF, selecciona todo (Ctrl+A), copia (Ctrl+C) y pégalo abajo.`);
@@ -98,7 +95,7 @@ export default function CVConverterPDFFlowise() {
       // Usar Flowise que ya funciona
       const proxyBase = 'http://localhost:4000';
       const canvasId = '03fe25e4-9ea8-48fc-98ed-0bae9c814a41';
-      
+
       const prompt = `Convierte este CV a formato JSON estructurado. Responde ÚNICAMENTE con JSON válido:
 
 {
@@ -155,7 +152,7 @@ CV: ${extractedText}`;
       }
 
       const data = await response.json();
-      
+
       // Extraer respuesta de Flowise
       let responseText = '';
       if (typeof data === 'string') {
@@ -172,7 +169,7 @@ CV: ${extractedText}`;
       let cleanedText = responseText.trim();
       cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
       cleanedText = cleanedText.replace(/&quot;/g, '"'); // Decodificar HTML entities
-      
+
       const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error(`No se encontró JSON válido. Respuesta: ${responseText}`);
@@ -180,9 +177,9 @@ CV: ${extractedText}`;
 
       const jsonString = jsonMatch[0];
       const parsedJson = JSON.parse(jsonString);
-      
+
       setJsonResult(JSON.stringify(parsedJson, null, 2));
-      
+
     } catch (err) {
       console.error('Error:', err);
       setError(`Error al convertir: ${err instanceof Error ? err.message : 'Error desconocido'}`);
@@ -249,21 +246,21 @@ CV: ${extractedText}`;
                 </p>
               </label>
             </div>
-            
+
             {file && (
               <div className="mt-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <FileText className="h-4 w-4" />
                   <span>{file.name}</span>
                 </div>
-                
+
                 {extracting && (
                   <div className="flex items-center gap-2 text-sm text-blue-600">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Extrayendo texto del PDF...</span>
                   </div>
                 )}
-                
+
                 {extractedText && !extracting && (
                   <div className="flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle className="h-4 w-4" />
@@ -341,7 +338,7 @@ CV: ${extractedText}`;
                   </button>
                 </div>
               </div>
-              
+
               <div className="bg-gray-900 rounded-lg p-4 overflow-auto max-h-96">
                 <pre className="text-green-400 text-sm font-mono">
                   {jsonResult}

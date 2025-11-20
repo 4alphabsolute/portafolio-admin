@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import cvData from '../data/cv-data.json';
 
 export interface CVData {
@@ -61,15 +60,15 @@ export const useFormatDate = () => {
     if (dateStr === 'presente' || dateStr === 'present') {
       return language === 'es' ? 'Presente' : 'Present';
     }
-    
+
     const [year, month] = dateStr.split('-');
     const months = {
       es: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
       en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     };
-    
+
     return `${months[language][parseInt(month) - 1]} ${year}`;
   };
-  
+
   return { formatDate };
 };

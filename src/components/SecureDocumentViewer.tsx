@@ -67,16 +67,17 @@ export default function SecureDocumentViewer({ documentUrl, title, onClose }: Se
     document.addEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('selectstart', preventSelection);
     document.addEventListener('dragstart', preventSelection);
-    
+
     // Verificar herramientas de desarrollador cada segundo
     const devToolsInterval = setInterval(detectDevTools, 1000);
 
     // CSS para prevenir selección
     if (viewerRef.current) {
-      viewerRef.current.style.userSelect = 'none';
-      viewerRef.current.style.webkitUserSelect = 'none';
-      viewerRef.current.style.mozUserSelect = 'none';
-      viewerRef.current.style.msUserSelect = 'none';
+      const style = viewerRef.current.style as any;
+      style.userSelect = 'none';
+      style.webkitUserSelect = 'none';
+      style.mozUserSelect = 'none';
+      style.msUserSelect = 'none';
     }
 
     return () => {
@@ -103,8 +104,8 @@ export default function SecureDocumentViewer({ documentUrl, title, onClose }: Se
             </svg>
           </button>
         </div>
-        
-        <div 
+
+        <div
           ref={viewerRef}
           className={`relative h-[70vh] overflow-auto ${isBlurred ? 'blur-lg' : ''}`}
           style={{
@@ -112,24 +113,24 @@ export default function SecureDocumentViewer({ documentUrl, title, onClose }: Se
             WebkitUserSelect: 'none',
             MozUserSelect: 'none',
             msUserSelect: 'none'
-          }}
+          } as any}
         >
           {/* Overlay invisible para prevenir interacciones */}
-          <div 
+          <div
             className="absolute inset-0 z-10"
-            style={{ 
+            style={{
               background: 'transparent',
               pointerEvents: isBlurred ? 'all' : 'none'
             }}
           />
-          
+
           {/* Watermark */}
           <div className="absolute inset-0 pointer-events-none z-20">
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-300 text-6xl font-bold opacity-10 rotate-45">
               ANDRÉS ALMEIDA
             </div>
           </div>
-          
+
           {documentUrl.endsWith('.pdf') ? (
             <iframe
               src={documentUrl}
@@ -142,7 +143,7 @@ export default function SecureDocumentViewer({ documentUrl, title, onClose }: Se
               src={documentUrl}
               alt={title}
               className="w-full h-full object-contain"
-              style={{ 
+              style={{
                 pointerEvents: 'none',
                 userSelect: 'none'
               }}
@@ -150,7 +151,7 @@ export default function SecureDocumentViewer({ documentUrl, title, onClose }: Se
             />
           )}
         </div>
-        
+
         {isBlurred && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
             <div className="bg-red-600 text-white p-6 rounded-lg text-center">
@@ -160,7 +161,7 @@ export default function SecureDocumentViewer({ documentUrl, title, onClose }: Se
             </div>
           </div>
         )}
-        
+
         <div className="p-4 bg-gray-50 text-center">
           <p className="text-sm text-gray-600">
             📄 Documento protegido - No se permiten capturas de pantalla

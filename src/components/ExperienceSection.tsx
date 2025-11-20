@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
-import cvData from '../data/cv-data.json';
 import { translateDynamicContent } from '../utils/dynamicTranslations';
-import { useFirebaseErrorHandler } from '../utils/firebaseErrorHandler';
+import { getFirebaseData, initializeFirebaseData } from '../utils/fullFirebaseManager';
 
 interface Experience {
   id?: string;
@@ -23,54 +20,37 @@ interface ExperienceSectionProps {
 export default function ExperienceSection({ t, language = 'es' }: ExperienceSectionProps) {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
-  const { handleError } = useFirebaseErrorHandler();
 
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
-        // Obtener experiencias de Firebase
-        const querySnapshot = await getDocs(collection(db, 'experiences'));
-        const firebaseExp = querySnapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
-        } as Experience));
+        await initializeFirebaseData();
+        const firebaseExp = await getFirebaseData('experiences') as Experience[];
+        const processedExp = firebaseExp.map(exp =>
+          translateDynamicContent(exp, language)
+        );
 
-        // Combinar con experiencias del JSON
-        const jsonExp = cvData.experience || [];
-        
-        // Unir ambas fuentes, traducir y ordenar por fecha (más reciente primero)
-        const allExp = [...firebaseExp, ...jsonExp].map(exp => {
-          const translated = translateDynamicContent(exp, language);
-          // Debug: Log de traducción para experiencias
-          if (language === 'en' && process.env.NODE_ENV === 'development') {
-            console.log('Experiencia traducida:', { original: exp.position, translated: translated.position });
-          }
-          return translated;
-        });
-        
-        // Ordenar por fecha de inicio (más reciente primero)
-        const sortedExp = allExp.sort((a, b) => {
-          // Convertir años para comparar
+        const sortedExp = processedExp.sort((a, b) => {
           const yearA = parseInt(a.startDate);
           const yearB = parseInt(b.startDate);
           return yearB - yearA;
         });
-        
+
         setExperiences(sortedExp);
       } catch (error) {
-        const fallbackExp = handleError(error, cvData.experience || []);
-        setExperiences(fallbackExp.map(exp => translateDynamicContent(exp, language)));
+        console.error('Error cargando experiencias:', error);
+        setExperiences([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchExperiences();
-  }, [language]); // Re-fetch cuando cambia el idioma para aplicar traducciones
+  }, [language]);
 
   if (loading) {
     return (
-      <section className="py-20 bg-white">
+      <section className="py-20">
         <div className="container mx-auto px-6 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t?.experience?.loading || 'Cargando experiencia...'}</p>
@@ -80,7 +60,7 @@ export default function ExperienceSection({ t, language = 'es' }: ExperienceSect
   }
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -103,13 +83,13 @@ export default function ExperienceSection({ t, language = 'es' }: ExperienceSect
                 {index !== experiences.length - 1 && (
                   <div className="absolute left-8 top-16 w-0.5 h-full bg-gray-200"></div>
                 )}
-                
+
                 <div className="flex items-start space-x-6">
                   {/* Timeline dot */}
                   <div className="flex-shrink-0 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                     {experiences.length - index}
                   </div>
-                  
+
                   {/* Content */}
                   <div className="flex-1 bg-gray-50 rounded-xl p-8 hover:shadow-lg transition-shadow">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
@@ -123,23 +103,20 @@ export default function ExperienceSection({ t, language = 'es' }: ExperienceSect
                       </div>
                       <div className="mt-2 md:mt-0">
                         <span className="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
-                          {exp.startDate} - {exp.endDate}
+                          {exp.startDate === exp.endDate ? exp.startDate : `${exp.startDate} - ${exp.endDate}`}
                         </span>
                       </div>
                     </div>
-                    
+
                     <p className="text-gray-700 mb-6 leading-relaxed">
                       {exp.description}
                     </p>
-                    
+
                     {exp.technologies && exp.technologies.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wide">
-                          {t?.experience?.technologies || 'Tecnologías'}
-                        </h4>
                         <div className="flex flex-wrap gap-2">
                           {exp.technologies.map((tech, techIndex) => (
-                            <span 
+                            <span
                               key={techIndex}
                               className="px-3 py-1 bg-white text-gray-700 rounded-full text-sm border border-gray-200"
                             >

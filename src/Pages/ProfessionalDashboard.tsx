@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 interface Mensaje {
   nombre: string;
@@ -10,12 +10,14 @@ interface Mensaje {
   empresa?: string;
   tipoProyecto?: string;
   idioma?: string;
+  language?: string;
   fecha: { seconds: number };
 }
 
 interface BotInteraction {
   userType: string;
   language: string;
+  idioma?: string;
   messageCount: number;
   timestamp: { seconds: number };
 }
@@ -28,7 +30,7 @@ export default function ProfessionalDashboard() {
   const [botInteractions, setBotInteractions] = useState<BotInteraction[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7d');
-  
+
   const [metrics, setMetrics] = useState({
     totalMessages: 0,
     todayMessages: 0,
@@ -92,25 +94,25 @@ export default function ProfessionalDashboard() {
   };
 
   const calculateMetrics = (messages: Mensaje[], interactions: BotInteraction[], startDate: Date) => {
-    const filteredMessages = messages.filter(m => 
+    const filteredMessages = messages.filter(m =>
       new Date(m.fecha.seconds * 1000) >= startDate
     );
-    const filteredInteractions = interactions.filter(i => 
+    const filteredInteractions = interactions.filter(i =>
       new Date(i.timestamp.seconds * 1000) >= startDate
     );
 
     // Mensajes de hoy
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayMessages = messages.filter(m => 
+    const todayMessages = messages.filter(m =>
       new Date(m.fecha.seconds * 1000) >= today
     ).length;
 
     // Contactos de reclutadores (estimado por palabras clave)
     const recruiterKeywords = ['reclutador', 'recruiter', 'hiring', 'job', 'position', 'vacancy', 'empresa', 'company'];
-    const recruiterContacts = filteredMessages.filter(m => 
-      recruiterKeywords.some(keyword => 
-        m.mensaje.toLowerCase().includes(keyword) || 
+    const recruiterContacts = filteredMessages.filter(m =>
+      recruiterKeywords.some(keyword =>
+        m.mensaje.toLowerCase().includes(keyword) ||
         (m.empresa && m.empresa.length > 0)
       )
     ).length;
@@ -226,11 +228,10 @@ export default function ProfessionalDashboard() {
                   <button
                     key={range.value}
                     onClick={() => setTimeRange(range.value)}
-                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                      timeRange === range.value 
-                        ? 'bg-white text-blue-600 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${timeRange === range.value
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     {range.label}
                   </button>
@@ -344,9 +345,9 @@ export default function ProfessionalDashboard() {
                   data={metrics.languageDistribution}
                   cx="50%" cy="50%" outerRadius={80}
                   dataKey="value"
-                  label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                  label={({ name, value, percent }: any) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
                 >
-                  {metrics.languageDistribution.map((entry, index) => (
+                  {metrics.languageDistribution.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
