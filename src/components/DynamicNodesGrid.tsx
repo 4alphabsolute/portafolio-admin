@@ -10,11 +10,11 @@ interface Node {
   opacity: number;
   type: 'data' | 'finance' | 'tech' | 'innovation';
   pulse: number;
-  behavior?: string;
 }
 
 export default function DynamicNodesGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: -1000, y: -1000 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -30,11 +30,14 @@ export default function DynamicNodesGrid() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Detectar zonas de exclusión (halos invisibles) - MEJORADO
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
+    // Detectar zonas de exclusión (halos invisibles)
     const getExclusionZones = () => {
       const zones = [];
-
-      // Hero: Foto y nombre con halos más grandes
       const heroImg = document.querySelector('img[alt*="Andrés"], img[alt*="profile"], .hero img, img');
       const heroTitle = document.querySelector('h1, .hero h1, [class*="hero"] h1');
 
@@ -57,307 +60,231 @@ export default function DynamicNodesGrid() {
           height: rect.height + 60
         });
       }
-
-      // Bloques de texto importantes con halos
-      const textBlocks = document.querySelectorAll('h2, h3, .text-xl, .text-2xl, .text-3xl, .text-4xl');
-      textBlocks.forEach(block => {
-        const rect = block.getBoundingClientRect();
-        if (rect.height > 20) {
-          zones.push({
-            x: rect.left - 40,
-            y: rect.top - 15,
-            width: rect.width + 80,
-            height: rect.height + 30
-          });
-        }
-      });
-
-      // Contenido de párrafos largos
-      const paragraphs = document.querySelectorAll('p');
-      paragraphs.forEach(p => {
-        const rect = p.getBoundingClientRect();
-        if (rect.height > 40 && rect.width > 200) {
-          zones.push({
-            x: rect.left - 20,
-            y: rect.top - 10,
-            width: rect.width + 40,
-            height: rect.height + 20
-          });
-        }
-      });
-
       return zones;
     };
 
-    // Detectar densidad de contenido por sección
-    const detectContentDensity = () => {
-      const projects = document.querySelectorAll('.project-card, [class*="project"]').length;
-      const certifications = document.querySelectorAll('.cert-card, [class*="cert"]').length;
-      const experience = document.querySelectorAll('.experience-item, [class*="experience"]').length;
-
-      return { projects, certifications, experience };
+    // Configuración de Flocking
+    const FLOCK_CONFIG = {
+      perceptionRadius: 100,
+      separationDistance: 40,
+      maxSpeed: 2,
+      maxForce: 0.05,
+      separationWeight: 1.5,
+      alignmentWeight: 1.0,
+      cohesionWeight: 1.0,
+      mouseRepulsionRadius: 200,
+      mouseRepulsionStrength: 2.0,
+      boundaryMargin: 100,
+      boundaryTurnFactor: 0.5
     };
 
-    // Configuración inteligente basada en contenido
+    // Configuración visual por sección
     const getConfigForPosition = (scrollProgress: number) => {
-      const density = detectContentDensity();
-      // Hero (0-20%): Estilo cibernético/simulación IA
-      if (scrollProgress < 0.2) {
+      if (scrollProgress < 0.2) { // Hero
         return {
-          nodeCount: 14,
-          colors: ['#0A66C2', '#3B82F6', '#60A5FA'],
-          baseSize: 6,
-          speed: 0.15, // Lento pero constante
-          connectionDistance: 180, // Conexiones más largas
-          opacity: 0.7,
-          respectZones: true,
-          behavior: 'cybernetic'
+          nodeCount: 60,
+          colors: ['#3B82F6', '#60A5FA', '#93C5FD'], // Azules claros
+          baseSize: 3,
+          opacity: 0.6
         };
-      }
-      // About/Certificaciones (20-40%): Transición suave
-      else if (scrollProgress < 0.4) {
-        const t = (scrollProgress - 0.2) / 0.2;
-        const certDensity = Math.max(density.certifications, 3);
-        const nodeReduction = Math.min(certDensity / 2, 4);
-
+      } else if (scrollProgress < 0.5) { // About/Exp
         return {
-          nodeCount: Math.floor(14 - nodeReduction - t * 4),
-          colors: t < 0.5 ?
-            ['#3B82F6', '#6B7280', '#9CA3AF'] :
-            ['#6B7280', '#9CA3AF', '#D1D5DB'],
-          baseSize: 6 - t * 2,
-          speed: 0.15 - t * 0.08,
-          connectionDistance: 180 - t * 60,
-          opacity: 0.7 - t * 0.3,
-          respectZones: true,
-          behavior: 'transitioning'
+          nodeCount: 50,
+          colors: ['#6366F1', '#8B5CF6', '#A78BFA'], // Violetas
+          baseSize: 3,
+          opacity: 0.5
         };
-      }
-      // Experiencia (40-60%): Muy calmados y respetuosos
-      else if (scrollProgress < 0.6) {
-        const expDensity = Math.max(density.experience, 2);
-        const nodeCount = Math.max(8 - expDensity, 3);
-
+      } else { // Projects/Contact
         return {
-          nodeCount,
-          colors: ['#9CA3AF', '#D1D5DB', '#E5E7EB'],
-          baseSize: Math.max(4 - expDensity * 0.2, 3),
-          speed: 0.04, // Muy lentos
-          connectionDistance: 120, // Conexiones visibles
-          opacity: 0.4,
-          respectZones: true,
-          behavior: 'respectful'
-        };
-      }
-      // Proyectos (60-80%): Transición hacia violetas
-      else if (scrollProgress < 0.8) {
-        const t = (scrollProgress - 0.6) / 0.2;
-        const projDensity = Math.max(density.projects, 2);
-
-        const baseNodes = projDensity < 4 ? 10 : Math.max(12 - projDensity, 6);
-
-        return {
-          nodeCount: Math.floor(baseNodes + t * 2),
-          colors: t < 0.5 ?
-            ['#9CA3AF', '#8B5CF6', '#6366F1'] :
-            ['#6366F1', '#8B5CF6', '#A78BFA'],
-          baseSize: projDensity < 4 ? 4 + t * 1.5 : 3.5 + t * 1,
-          speed: 0.04 + t * 0.06,
-          connectionDistance: 120 + t * 40,
-          opacity: 0.4 + t * 0.3,
-          respectZones: true,
-          behavior: 'awakening'
-        };
-      }
-      // Contacto (80-100%): Asentados y expectantes
-      else {
-        return {
-          nodeCount: 8, // Pocos nodos asentados
-          colors: ['#FFFFFF', '#FEF3C7', '#FDE68A', '#F3E8FF'],
-          baseSize: 5, // Sin pulsaciones
-          speed: 0.03, // Muy lentos, asentados
-          connectionDistance: 140, // Conexiones más visibles
-          opacity: 0.8,
-          respectZones: false,
-          behavior: 'settled' // Asentados
+          nodeCount: 40,
+          colors: ['#10B981', '#34D399', '#6EE7B7'], // Verdes/Teal
+          baseSize: 3,
+          opacity: 0.5
         };
       }
     };
 
-    // Detectar progreso de scroll para transición fluida
     const getScrollProgress = () => {
       const scrollY = window.scrollY;
       const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
       return Math.min(scrollY / documentHeight, 1);
     };
 
-    // Verificar si un punto está en zona de exclusión
-    const isInExclusionZone = (x: number, y: number, zones: any[]) => {
-      return zones.some(zone =>
-        x >= zone.x && x <= zone.x + zone.width &&
-        y >= zone.y && y <= zone.y + zone.height
-      );
-    };
-
-    // Crear nodos inteligentes que respetan contenido
+    // Inicializar nodos
     const nodes: Node[] = [];
-    const createNodes = (config: any) => {
-      const exclusionZones = config.respectZones ? getExclusionZones() : [];
-
-      // Ajustar cantidad gradualmente
-      while (nodes.length > config.nodeCount) {
-        nodes.pop();
+    const initNodes = (config: any) => {
+      // Ajustar cantidad de nodos suavemente
+      if (nodes.length < config.nodeCount) {
+        for (let i = nodes.length; i < config.nodeCount; i++) {
+          nodes.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * FLOCK_CONFIG.maxSpeed,
+            vy: (Math.random() - 0.5) * FLOCK_CONFIG.maxSpeed,
+            size: config.baseSize + Math.random() * 2,
+            color: config.colors[Math.floor(Math.random() * config.colors.length)],
+            opacity: 0, // Aparecen gradualmente
+            type: 'data',
+            pulse: Math.random() * Math.PI * 2
+          });
+        }
+      } else if (nodes.length > config.nodeCount) {
+        nodes.splice(config.nodeCount);
       }
 
-      while (nodes.length < config.nodeCount) {
-        let x, y, attempts = 0;
+      // Actualizar propiedades visuales gradualmente
+      nodes.forEach(node => {
+        if (node.opacity < config.opacity) node.opacity += 0.01;
+        // Mezclar colores suavemente sería complejo, simplificamos reasignando ocasionalmente
+        if (Math.random() < 0.01) {
+          node.color = config.colors[Math.floor(Math.random() * config.colors.length)];
+        }
+      });
+    };
 
-        // Intentar encontrar posición que no interfiera con contenido
-        do {
-          x = Math.random() * canvas.width;
-          y = Math.random() * canvas.height;
-          attempts++;
-        } while (isInExclusionZone(x, y, exclusionZones) && attempts < 50);
+    // --- Algoritmo de Boids (Flocking) ---
 
-        nodes.push({
-          x,
-          y,
-          vx: (Math.random() - 0.5) * config.speed,
-          vy: (Math.random() - 0.5) * config.speed,
-          size: config.baseSize + Math.random() * 2,
-          color: config.colors[Math.floor(Math.random() * config.colors.length)],
-          opacity: config.opacity + Math.random() * 0.1,
-          type: 'data',
-          pulse: Math.random() * Math.PI * 2,
-          behavior: config.behavior || 'normal'
-        });
+    const applyFlocking = (node: Node, index: number, exclusionZones: any[]) => {
+      let separationX = 0, separationY = 0;
+      let alignmentX = 0, alignmentY = 0;
+      let cohesionX = 0, cohesionY = 0;
+      let totalNeighbors = 0;
+
+      nodes.forEach((other, otherIndex) => {
+        if (index === otherIndex) return;
+
+        const dx = other.x - node.x;
+        const dy = other.y - node.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < FLOCK_CONFIG.perceptionRadius) {
+          // Separation
+          if (distance < FLOCK_CONFIG.separationDistance) {
+            separationX -= dx / distance;
+            separationY -= dy / distance;
+          }
+
+          // Alignment
+          alignmentX += other.vx;
+          alignmentY += other.vy;
+
+          // Cohesion
+          cohesionX += other.x;
+          cohesionY += other.y;
+
+          totalNeighbors++;
+        }
+      });
+
+      if (totalNeighbors > 0) {
+        // Normalizar y aplicar pesos
+        alignmentX /= totalNeighbors;
+        alignmentY /= totalNeighbors;
+        cohesionX = (cohesionX / totalNeighbors) - node.x;
+        cohesionY = (cohesionY / totalNeighbors) - node.y;
+
+        // Limitar fuerzas
+        const limitForce = (x: number, y: number, max: number) => {
+          const mag = Math.sqrt(x * x + y * y);
+          if (mag > max) {
+            return { x: (x / mag) * max, y: (y / mag) * max };
+          }
+          return { x, y };
+        };
+
+        // Aplicar fuerzas
+        node.vx += separationX * FLOCK_CONFIG.separationWeight * 0.05;
+        node.vy += separationY * FLOCK_CONFIG.separationWeight * 0.05;
+
+        node.vx += alignmentX * FLOCK_CONFIG.alignmentWeight * 0.05;
+        node.vy += alignmentY * FLOCK_CONFIG.alignmentWeight * 0.05;
+
+        const cohesionForce = limitForce(cohesionX, cohesionY, FLOCK_CONFIG.maxForce);
+        node.vx += cohesionForce.x * FLOCK_CONFIG.cohesionWeight * 0.01;
+        node.vy += cohesionForce.y * FLOCK_CONFIG.cohesionWeight * 0.01;
       }
+
+      // Interacción con Mouse (Repulsión)
+      const dxMouse = node.x - mouseRef.current.x;
+      const dyMouse = node.y - mouseRef.current.y;
+      const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+
+      if (distMouse < FLOCK_CONFIG.mouseRepulsionRadius) {
+        const force = (FLOCK_CONFIG.mouseRepulsionRadius - distMouse) / FLOCK_CONFIG.mouseRepulsionRadius;
+        node.vx += (dxMouse / distMouse) * force * FLOCK_CONFIG.mouseRepulsionStrength;
+        node.vy += (dyMouse / distMouse) * force * FLOCK_CONFIG.mouseRepulsionStrength;
+      }
+
+      // Evitar zonas de exclusión (Halos)
+      exclusionZones.forEach(zone => {
+        const centerX = zone.x + zone.width / 2;
+        const centerY = zone.y + zone.height / 2;
+        const dxZone = node.x - centerX;
+        const dyZone = node.y - centerY;
+        const distZone = Math.sqrt(dxZone * dxZone + dyZone * dyZone);
+        const maxDim = Math.max(zone.width, zone.height) / 1.5; // Radio aproximado
+
+        if (distZone < maxDim) {
+          const force = (maxDim - distZone) / maxDim;
+          node.vx += (dxZone / distZone) * force * 1.5;
+          node.vy += (dyZone / distZone) * force * 1.5;
+        }
+      });
+
+      // Mantener dentro de los límites (Soft boundaries)
+      const margin = FLOCK_CONFIG.boundaryMargin;
+      if (node.x < margin) node.vx += FLOCK_CONFIG.boundaryTurnFactor;
+      if (node.x > canvas.width - margin) node.vx -= FLOCK_CONFIG.boundaryTurnFactor;
+      if (node.y < margin) node.vy += FLOCK_CONFIG.boundaryTurnFactor;
+      if (node.y > canvas.height - margin) node.vy -= FLOCK_CONFIG.boundaryTurnFactor;
+
+      // Limitar velocidad máxima
+      const speed = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
+      if (speed > FLOCK_CONFIG.maxSpeed) {
+        node.vx = (node.vx / speed) * FLOCK_CONFIG.maxSpeed;
+        node.vy = (node.vy / speed) * FLOCK_CONFIG.maxSpeed;
+      }
+
+      // Actualizar posición
+      node.x += node.vx;
+      node.y += node.vy;
     };
 
-    // Inicializar con configuración por defecto
-    let currentConfig = getConfigForPosition(0);
-    createNodes(currentConfig);
-
-    // Nodos circulares tipo red neuronal/base de datos
-    const drawNeuralNode = (node: Node, breathe: number) => {
-      const radius = node.size * breathe;
-
-      // Núcleo del nodo
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Anillo exterior sutil
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, radius + 1, 0, Math.PI * 2);
-      ctx.strokeStyle = node.color;
-      ctx.lineWidth = 0.5;
-      ctx.stroke();
-    };
-
-    let time = 0;
     let animationFrameId: number;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      time += 0.01;
 
-      // Transición fluida basada en scroll
       const scrollProgress = getScrollProgress();
       const currentConfig = getConfigForPosition(scrollProgress);
+      const exclusionZones = getExclusionZones();
 
-      // Actualizar nodos gradualmente
-      if (Math.random() < 0.1) { // Solo actualizar ocasionalmente
-        createNodes(currentConfig);
-      }
-
-      // Animar nodos con comportamientos especiales
-      const exclusionZones = currentConfig.respectZones ? getExclusionZones() : [];
+      initNodes(currentConfig);
 
       nodes.forEach((node, index) => {
-        // Comportamientos cibernéticos suaves
-        if (node.behavior === 'cybernetic') {
-          // Hero: Movimiento constante tipo simulación IA
-          node.pulse += 0.01;
-          // Movimiento lineal con pequeñas variaciones
-          const variation = Math.sin(node.pulse) * 0.1;
-          node.vx += variation * 0.005;
-          node.vy += variation * 0.005;
-        } else if (node.behavior === 'transitioning') {
-          // Transición suave
-          node.pulse += 0.008;
-          const transition = Math.sin(node.pulse) * 0.05;
-          node.vx += transition * 0.003;
-          node.vy += transition * 0.003;
-        } else if (node.behavior === 'respectful') {
-          // RESPETO ESTRICTO de zonas de exclusión
-          const futureX = node.x + node.vx * 10; // Predecir posición
-          const futureY = node.y + node.vy * 10;
+        applyFlocking(node, index, exclusionZones);
 
-          if (isInExclusionZone(futureX, futureY, exclusionZones)) {
-            // Cambiar dirección suavemente
-            node.vx *= -0.8;
-            node.vy *= -0.8;
-            // Añadir desviación
-            node.vx += (Math.random() - 0.5) * 0.02;
-            node.vy += (Math.random() - 0.5) * 0.02;
-          }
-          node.pulse += 0.005;
-        } else if (node.behavior === 'awakening') {
-          // Despertar muy gradual
-          node.pulse += 0.01;
-          const awakening = Math.sin(node.pulse) * 0.08;
-          node.vx += awakening * 0.004;
-          node.vy += awakening * 0.004;
-        } else if (node.behavior === 'settled') {
-          // Asentados: movimiento mínimo
-          node.pulse += 0.003;
-          const settled = Math.sin(node.pulse) * 0.02;
-          node.vx += settled * 0.001;
-          node.vy += settled * 0.001;
-        }
-
-        // Movimiento básico
-        node.x += node.vx;
-        node.y += node.vy;
-        node.pulse += 0.02;
-
-        // Rebote en bordes
-        if (node.x <= 0 || node.x >= canvas.width) node.vx *= -1;
-        if (node.y <= 0 || node.y >= canvas.height) node.vy *= -1;
-
-        // Sin pulsaciones - estilo cibernético limpio
-        const breathe = 1; // Sin efectos de respiración
-
-        // Dibujar nodo neuronal
+        // Dibujar nodo
         ctx.globalAlpha = node.opacity;
         ctx.fillStyle = node.color;
-        drawNeuralNode(node, breathe);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Conexiones dinámicas
-        nodes.slice(index + 1).forEach(otherNode => {
-          const dx = node.x - otherNode.x;
-          const dy = node.y - otherNode.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+        // Dibujar conexiones cercanas (Cardumen visual)
+        nodes.slice(index + 1).forEach(other => {
+          const dx = node.x - other.x;
+          const dy = node.y - other.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < currentConfig.connectionDistance) {
-            // Conexiones más visibles y harmónicas
-            const opacity = (currentConfig.connectionDistance - distance) / currentConfig.connectionDistance;
-            let connectionOpacity = opacity * currentConfig.opacity * 0.6; // Más visibles
-
-            // Verificar que la conexión no pase por zonas de exclusión
-            const midX = (node.x + otherNode.x) / 2;
-            const midY = (node.y + otherNode.y) / 2;
-
-            if (!isInExclusionZone(midX, midY, exclusionZones)) {
-              ctx.globalAlpha = connectionOpacity;
-              ctx.strokeStyle = node.color;
-              ctx.lineWidth = 1.2; // Líneas más gruesas
-              ctx.beginPath();
-              ctx.moveTo(node.x, node.y);
-              ctx.lineTo(otherNode.x, otherNode.y);
-              ctx.stroke();
-            }
+          if (dist < 60) { // Conexiones cortas para efecto de grupo
+            ctx.beginPath();
+            ctx.moveTo(node.x, node.y);
+            ctx.lineTo(other.x, other.y);
+            ctx.strokeStyle = node.color;
+            ctx.lineWidth = 0.5;
+            ctx.globalAlpha = (1 - dist / 60) * node.opacity * 0.5;
+            ctx.stroke();
           }
         });
       });
@@ -365,17 +292,11 @@ export default function DynamicNodesGrid() {
       animationFrameId = requestAnimationFrame(animate);
     };
 
-    // Scroll listener para transición fluida
-    const handleScroll = () => {
-      // La transición se maneja automáticamente en animate()
-    };
-    window.addEventListener('scroll', handleScroll);
-
     animate();
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
