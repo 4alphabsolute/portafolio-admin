@@ -25,19 +25,21 @@ export default function DynamicNodesGrid() {
   // Update ref when state changes
   useEffect(() => {
     sectionRef.current = activeSection;
+    console.log('Active Section Changed:', activeSection); // Debug log
   }, [activeSection]);
 
   // Intersection Observer to detect active section
   useEffect(() => {
     const observerOptions = {
-      threshold: 0.2, // Trigger when 20% visible
-      rootMargin: "-20% 0px -20% 0px" // Focus on center of screen
+      threshold: 0.2, // Trigger when 20% visible - More sensitive
+      rootMargin: "-10% 0px -10% 0px" // Slightly larger detection area
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const id = entry.target.id;
+          console.log('Intersecting:', id); // Debug log
           if (id === 'home') setActiveSection('hero');
           else if (id === 'about') setActiveSection('about');
           else if (id === 'certifications') setActiveSection('certifications');
@@ -52,6 +54,7 @@ export default function DynamicNodesGrid() {
     sections.forEach(id => {
       const element = document.getElementById(id);
       if (element) observer.observe(element);
+      else console.warn(`Section ID not found: ${id}`); // Debug warning
     });
 
     return () => observer.disconnect();
@@ -137,13 +140,29 @@ export default function DynamicNodesGrid() {
             y: (row + 1) * cellH
           });
         }
-      } else if (shape === 'infinity') {
+      } else if (shape === 'at-symbol') { // New @ symbol shape
         for (let i = 0; i < count; i++) {
-          const t = (i / count) * Math.PI * 2;
-          const scale = Math.min(width, height) * 0.25;
-          const x = centerX + (scale * Math.sqrt(2) * Math.cos(t)) / (Math.sin(t) * Math.sin(t) + 1);
-          const y = centerY + (scale * Math.sqrt(2) * Math.cos(t) * Math.sin(t)) / (Math.sin(t) * Math.sin(t) + 1);
-          points.push({ x, y });
+          // Spiral parametric equation
+          const t = (i / count) * Math.PI * 4; // 2 full rotations
+          const scale = Math.min(width, height) * 0.05; // Scale factor
+
+          // Inner circle (a)
+          if (i < count * 0.3) {
+            const angle = (i / (count * 0.3)) * Math.PI * 2;
+            const r = scale * 3;
+            points.push({
+              x: centerX + Math.cos(angle) * r,
+              y: centerY + Math.sin(angle) * r
+            });
+          } else {
+            // Outer spiral
+            const angle = ((i - count * 0.3) / (count * 0.7)) * Math.PI * 2.5 + Math.PI;
+            const r = scale * 4 + (angle * scale * 0.8);
+            points.push({
+              x: centerX + Math.cos(angle) * r,
+              y: centerY + Math.sin(angle) * r
+            });
+          }
         }
       }
       return points;
@@ -182,10 +201,13 @@ export default function DynamicNodesGrid() {
 
       // Determine targets based on section
       if (currentSection === 'hero') {
-        // Orbiting center
+        // Orbiting center - LARGER HALO
+        const minDim = Math.min(canvas.width, canvas.height);
+        const baseRadius = minDim * 0.35; // Increased from ~200px to 35% of screen min dimension
+
         nodes.forEach((node, i) => {
           const angle = time * 0.2 + (i / NODE_COUNT) * Math.PI * 2;
-          const radius = 200 + Math.sin(time * 0.5 + i) * 50;
+          const radius = baseRadius + Math.sin(time * 0.5 + i) * 50; // Dynamic breathing
           node.targetX = canvas.width / 2 + Math.cos(angle) * radius;
           node.targetY = canvas.height / 2 + Math.sin(angle) * radius;
         });
@@ -212,10 +234,10 @@ export default function DynamicNodesGrid() {
           node.targetY = targetPoints[i].y;
         });
       } else if (currentSection === 'contact') {
-        // Infinity symbol
-        targetPoints = getShapePoints('infinity', canvas.width, canvas.height, NODE_COUNT);
+        // @ Symbol
+        targetPoints = getShapePoints('at-symbol', canvas.width, canvas.height, NODE_COUNT);
         nodes.forEach((node, i) => {
-          // Rotate the infinity symbol points
+          // Rotate the symbol points slightly
           const point = targetPoints[i];
           node.targetX = point.x;
           node.targetY = point.y;
@@ -275,8 +297,6 @@ export default function DynamicNodesGrid() {
         ctx.fill();
 
         // Draw Connections (only if close)
-        // Optimization: Only check a subset or use spatial hash if needed. 
-        // For 60 nodes, O(N^2) is 3600 checks, which is fine.
         nodes.forEach(other => {
           const dX = node.x - other.x;
           const dY = node.y - other.y;
