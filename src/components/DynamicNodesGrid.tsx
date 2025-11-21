@@ -12,6 +12,7 @@ interface Node {
   baseColor: string;
   opacity: number;
   type: 'data' | 'finance' | 'tech' | 'innovation';
+  isAmbient: boolean; // New property for 70/30 split
 }
 
 type SectionState = 'hero' | 'about' | 'certifications' | 'experience' | 'projects' | 'contact';
@@ -29,16 +30,16 @@ export default function DynamicNodesGrid() {
       isExplodingRef.current = true;
       setTimeout(() => {
         isExplodingRef.current = false;
-      }, 400);
+      }, 200); // Reduced to 200ms for instant reaction
     }
     sectionRef.current = activeSection;
   }, [activeSection]);
 
-  // Intersection Observer
+  // Intersection Observer - Tuned for earlier detection
   useEffect(() => {
     const observerOptions = {
-      threshold: 0.2,
-      rootMargin: "-20% 0px -20% 0px"
+      threshold: 0.1, // Trigger even earlier
+      rootMargin: "-10% 0px -10% 0px" // Tighter margin
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -75,11 +76,15 @@ export default function DynamicNodesGrid() {
     const colors = ['#3B82F6', '#6366F1', '#8B5CF6', '#10B981', '#60A5FA'];
 
     const initNodes = () => {
-      const density = (window.innerWidth * window.innerHeight) / 4000;
+      // Density Formula: (W * H) / 2000
+      const density = (window.innerWidth * window.innerHeight) / 2000;
       const NODE_COUNT = Math.floor(density);
 
       nodes = [];
       for (let i = 0; i < NODE_COUNT; i++) {
+        // 70/30 Rule: 30% are ambient
+        const isAmbient = Math.random() < 0.3;
+
         nodes.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
@@ -87,11 +92,12 @@ export default function DynamicNodesGrid() {
           vy: 0,
           targetX: Math.random() * canvas.width,
           targetY: Math.random() * canvas.height,
-          size: 0.5 + Math.random() * 1.5, // Micro-particles
+          size: 1 + Math.random() * 0.5, // 1px - 1.5px
           color: colors[Math.floor(Math.random() * colors.length)],
           baseColor: colors[Math.floor(Math.random() * colors.length)],
-          opacity: 0.1 + Math.random() * 0.4,
-          type: 'data'
+          opacity: 0.6, // Fixed alpha 0.6
+          type: 'data',
+          isAmbient
         });
       }
     };
@@ -109,68 +115,67 @@ export default function DynamicNodesGrid() {
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // --- Shape Generation ---
+    // --- Shape Generation (Math Pure) ---
     const getShapePoints = (shape: string, width: number, height: number, count: number) => {
       const points = [];
       const centerX = width / 2;
       const centerY = height / 2;
       const minDim = Math.min(width, height);
 
-      if (shape === 'dodecahedron') { // Hero/About
+      if (shape === 'dodecahedron') { // Hero
+        const radius = minDim * 0.45; // 45% of min dimension (Almost half screen)
         for (let i = 0; i < count; i++) {
-          const angle = (i / count) * Math.PI * 2;
-          const r = minDim * 0.3 + Math.sin(angle * 6) * 20; // Star-like
+          // Two rings to simulate 3D-ish structure
+          const ring = i % 2 === 0 ? 1 : 0.6;
+          const angle = (i / count) * Math.PI * 4; // 2 full circles distributed
           points.push({
-            x: centerX + Math.cos(angle) * r,
-            y: centerY + Math.sin(angle) * r
+            x: centerX + Math.cos(angle) * radius * ring,
+            y: centerY + Math.sin(angle) * radius * ring
           });
         }
-      } else if (shape === 'frame') { // Certifications
-        for (let i = 0; i < count; i++) {
-          const perimeter = (width + height) * 2;
-          const pos = (i / count) * perimeter;
-          let x, y;
-          if (pos < width) { x = pos; y = 0; }
-          else if (pos < width + height) { x = width; y = pos - width; }
-          else if (pos < width * 2 + height) { x = width - (pos - (width + height)); y = height; }
-          else { x = 0; y = height - (pos - (width * 2 + height)); }
-
-          // Organic offset
-          const offset = Math.sin(i * 0.1) * 50;
-          if (x === 0 || x === width) x += offset;
-          else y += offset;
-
-          points.push({ x, y });
-        }
-      } else if (shape === 'code') { // Experience
+      } else if (shape === 'py-symbol') { // Experience
         const isMobile = width < 768;
-        const offsetX = isMobile ? 0 : width * 0.25; // Shift right on desktop
+        const startX = isMobile ? centerX - 50 : width * 0.15; // Left aligned on desktop
+        const startY = centerY;
+        const scale = 4; // Scale for points
 
         for (let i = 0; i < count; i++) {
+          // Draw "Py" roughly
+          // P: Vertical line + Loop
+          // y: Diagonal + Vertical
           const t = i / count;
           let x, y;
 
-          if (t < 0.33) { // <
-            const localT = t / 0.33;
-            x = centerX + offsetX - 100 + localT * 50;
-            y = centerY - 50 + Math.abs(localT - 0.5) * 100;
-          } else if (t < 0.66) { // /
-            const localT = (t - 0.33) / 0.33;
-            x = centerX + offsetX + (localT - 0.5) * 50;
-            y = centerY + (0.5 - localT) * 100;
-          } else { // >
-            const localT = (t - 0.66) / 0.34;
-            x = centerX + offsetX + 50 + localT * 50;
-            y = centerY - 50 + Math.abs(localT - 0.5) * 100;
+          if (t < 0.5) { // P
+            const pt = t / 0.5;
+            if (pt < 0.4) { // Vertical
+              x = 0;
+              y = (pt / 0.4) * 40 - 20;
+            } else { // Loop
+              const angle = ((pt - 0.4) / 0.6) * Math.PI * 2 - Math.PI / 2;
+              x = 10 + Math.cos(angle) * 10;
+              y = -10 + Math.sin(angle) * 10;
+              if (x < 0) x = 0; // Clamp to vertical
+            }
+          } else { // y
+            const yt = (t - 0.5) / 0.5;
+            if (yt < 0.5) { // Left diagonal
+              x = 30 + (yt / 0.5) * 10;
+              y = -20 + (yt / 0.5) * 20;
+            } else { // Right diagonal (long)
+              x = 50 - ((yt - 0.5) / 0.5) * 20;
+              y = -20 + ((yt - 0.5) / 0.5) * 60;
+            }
           }
 
-          // Cloud effect
-          x += (Math.random() - 0.5) * 30;
-          y += (Math.random() - 0.5) * 30;
-          points.push({ x, y });
+          points.push({
+            x: startX + x * scale,
+            y: startY + y * scale
+          });
         }
-      } else if (shape === 'constellation') { // Projects
-        // Random distributed points covering screen
+
+      } else if (shape === 'neural-net') { // Projects
+        // Random distributed but clustered
         for (let i = 0; i < count; i++) {
           points.push({
             x: Math.random() * width,
@@ -179,24 +184,34 @@ export default function DynamicNodesGrid() {
         }
       } else if (shape === 'at-symbol') { // Contact
         for (let i = 0; i < count; i++) {
-          const t = (i / count) * Math.PI * 4;
-          const scale = minDim * 0.05;
+          const scale = minDim * 0.15;
 
-          if (i < count * 0.3) { // Inner circle
-            const angle = (i / (count * 0.3)) * Math.PI * 2;
-            const r = scale * 3;
+          if (i < count * 0.4) { // Dense Center Circle
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.random() * scale * 0.8;
             points.push({
               x: centerX + Math.cos(angle) * r,
               y: centerY + Math.sin(angle) * r
             });
-          } else { // Spiral
-            const angle = ((i - count * 0.3) / (count * 0.7)) * Math.PI * 2.5 + Math.PI;
-            const r = scale * 4 + (angle * scale * 0.8);
+          } else { // Outer Arc (270 deg)
+            const t = (i - count * 0.4) / (count * 0.6); // 0 to 1
+            const angle = t * Math.PI * 1.5 + Math.PI; // Start at 180, go 270 deg
+            const r = scale * 1.5;
             points.push({
               x: centerX + Math.cos(angle) * r,
               y: centerY + Math.sin(angle) * r
             });
           }
+        }
+      } else {
+        // Default circle
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.random() * minDim * 0.4;
+          points.push({
+            x: centerX + Math.cos(angle) * r,
+            y: centerY + Math.sin(angle) * r
+          });
         }
       }
       return points;
@@ -212,30 +227,34 @@ export default function DynamicNodesGrid() {
 
       const currentSection = sectionRef.current;
       const isExploding = isExplodingRef.current;
+
+      // Filter nodes for shape (70%) vs ambient (30%)
+      const shapeNodes = nodes.filter(n => !n.isAmbient);
+      const ambientNodes = nodes.filter(n => n.isAmbient);
+
       let targetPoints: { x: number, y: number }[] = [];
 
-      // Determine targets
+      // Determine targets for SHAPE nodes only
       if (currentSection === 'hero' || currentSection === 'about') {
-        targetPoints = getShapePoints('dodecahedron', canvas.width, canvas.height, nodes.length);
+        targetPoints = getShapePoints('dodecahedron', canvas.width, canvas.height, shapeNodes.length);
       } else if (currentSection === 'certifications') {
-        targetPoints = getShapePoints('frame', canvas.width, canvas.height, nodes.length);
+        targetPoints = getShapePoints('dodecahedron', canvas.width, canvas.height, shapeNodes.length); // Reuse or simple
       } else if (currentSection === 'experience') {
-        targetPoints = getShapePoints('code', canvas.width, canvas.height, nodes.length);
+        targetPoints = getShapePoints('py-symbol', canvas.width, canvas.height, shapeNodes.length);
       } else if (currentSection === 'projects') {
-        targetPoints = getShapePoints('constellation', canvas.width, canvas.height, nodes.length);
+        targetPoints = getShapePoints('neural-net', canvas.width, canvas.height, shapeNodes.length);
       } else if (currentSection === 'contact') {
-        targetPoints = getShapePoints('at-symbol', canvas.width, canvas.height, nodes.length);
+        targetPoints = getShapePoints('at-symbol', canvas.width, canvas.height, shapeNodes.length);
       }
 
-      // Update Physics
-      nodes.forEach((node, i) => {
-        // Target assignment
+      // Update Shape Nodes
+      shapeNodes.forEach((node, i) => {
         if (targetPoints[i]) {
           if (currentSection === 'hero' || currentSection === 'about') {
             // Rotate hero shape
             const x = targetPoints[i].x - canvas.width / 2;
             const y = targetPoints[i].y - canvas.height / 2;
-            const angle = time * 0.2;
+            const angle = time * 0.1; // Slow rotation
             node.targetX = canvas.width / 2 + x * Math.cos(angle) - y * Math.sin(angle);
             node.targetY = canvas.height / 2 + x * Math.sin(angle) + y * Math.cos(angle);
           } else {
@@ -244,23 +263,24 @@ export default function DynamicNodesGrid() {
           }
         }
 
-        // Explosion effect
+        // Explosion (High Speed)
         if (isExploding) {
-          node.targetX += (Math.random() - 0.5) * 500;
-          node.targetY += (Math.random() - 0.5) * 500;
+          node.targetX += (Math.random() - 0.5) * 800; // Faster explosion
+          node.targetY += (Math.random() - 0.5) * 800;
         }
 
-        // Physics
+        // Physics - Snappier
         const dx = node.targetX - node.x;
         const dy = node.targetY - node.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        const speed = dist < 100 ? (dist / 100) * 2 : 2;
+        // Increased speed factor for responsiveness
+        const speed = dist < 100 ? (dist / 100) * 8 : 8;
         const steerX = (dx / dist) * speed - node.vx;
         const steerY = (dy / dist) * speed - node.vy;
 
-        node.vx += steerX * 0.05;
-        node.vy += steerY * 0.05;
+        node.vx += steerX * 0.1; // Higher force
+        node.vy += steerY * 0.1;
 
         // Mouse Repulsion
         const dxMouse = node.x - mouseRef.current.x;
@@ -269,14 +289,14 @@ export default function DynamicNodesGrid() {
 
         if (distMouse < 150) {
           const force = (150 - distMouse) / 150;
-          node.vx += (dxMouse / distMouse) * force * 2;
-          node.vy += (dyMouse / distMouse) * force * 2;
+          node.vx += (dxMouse / distMouse) * force * 3;
+          node.vy += (dyMouse / distMouse) * force * 3;
         }
 
         node.x += node.vx;
         node.y += node.vy;
-        node.vx *= 0.95;
-        node.vy *= 0.95;
+        node.vx *= 0.90; // Less friction for speed
+        node.vy *= 0.90;
 
         // Draw
         ctx.globalAlpha = node.opacity;
@@ -285,13 +305,13 @@ export default function DynamicNodesGrid() {
         ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Minimal connections
-        if (currentSection === 'projects') { // Only connect in constellation mode
-          nodes.slice(i + 1, i + 5).forEach(other => { // Limit checks
+        // Connections for Neural Net
+        if (currentSection === 'projects') {
+          // ... (Simplified connection logic if needed, or skip for performance)
+          shapeNodes.slice(i + 1, i + 3).forEach(other => {
             const dX = node.x - other.x;
             const dY = node.y - other.y;
-            const d = Math.sqrt(dX * dX + dY * dY);
-            if (d < 50) {
+            if (Math.abs(dX) < 50 && Math.abs(dY) < 50) { // Fast check
               ctx.beginPath();
               ctx.moveTo(node.x, node.y);
               ctx.lineTo(other.x, other.y);
@@ -302,6 +322,36 @@ export default function DynamicNodesGrid() {
             }
           });
         }
+      });
+
+      // Update Ambient Nodes (Floating freely)
+      ambientNodes.forEach(node => {
+        // Gentle float
+        node.targetX = node.x + Math.sin(time + node.x) * 20;
+        node.targetY = node.y + Math.cos(time + node.y) * 20;
+
+        const dx = node.targetX - node.x;
+        const dy = node.targetY - node.y;
+
+        node.vx += dx * 0.001;
+        node.vy += dy * 0.001;
+
+        node.x += node.vx;
+        node.y += node.vy;
+        node.vx *= 0.95;
+        node.vy *= 0.95;
+
+        // Wrap around screen
+        if (node.x < 0) node.x = canvas.width;
+        if (node.x > canvas.width) node.x = 0;
+        if (node.y < 0) node.y = canvas.height;
+        if (node.y > canvas.height) node.y = 0;
+
+        ctx.globalAlpha = node.opacity * 0.5; // Fainter
+        ctx.fillStyle = node.color;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+        ctx.fill();
       });
 
       animationFrameId = requestAnimationFrame(animate);
