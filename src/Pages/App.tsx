@@ -69,18 +69,30 @@ function App() {
       {/* <FloatingCTA /> */}
       <div className="relative z-20">
         <Navbar t={t} language={language} toggleLanguage={toggleLanguage} />
-        <Hero t={t} language={language} />
+        <div id="hero">
+          <Hero t={t} language={language} />
+        </div>
         {/* <div className="container mx-auto px-4 py-8">
           <SocialProof />
         </div> */}
-        <About t={t} />
-        <CertificationsSection language={language} />
-        <ExperienceSection t={t} language={language} />
-        <ProjectsSection t={t} language={language} />
+        <section id="about">
+          <About t={t} />
+        </section>
+        <section id="certifications">
+          <CertificationsSection language={language} />
+        </section>
+        <section id="experience">
+          <ExperienceSection t={t} language={language} />
+        </section>
+        <section id="projects">
+          <ProjectsSection t={t} language={language} />
+        </section>
         <section id="blog">
           <BlogSection t={t} language={language} />
         </section>
-        <UnifiedContactSection language={language} />
+        <section id="contact">
+          <UnifiedContactSection language={language} />
+        </section>
         <Footer t={t} />
       </div>
       <AndyChat />
