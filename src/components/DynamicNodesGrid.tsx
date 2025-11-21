@@ -12,7 +12,7 @@ interface Node {
   baseColor: string;
   opacity: number;
   type: 'data' | 'finance' | 'tech' | 'innovation';
-  isAmbient: boolean; // New property for 70/30 split
+  isAmbient: boolean;
 }
 
 type SectionState = 'hero' | 'about' | 'certifications' | 'experience' | 'projects' | 'contact';
@@ -22,24 +22,38 @@ export default function DynamicNodesGrid() {
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const [activeSection, setActiveSection] = useState<SectionState>('hero');
   const sectionRef = useRef<SectionState>('hero');
-  const isExplodingRef = useRef(false);
 
-  // Update ref when state changes
+  // Matrices for Stencils
+  const sqlGrid = [
+    "01111100011111001100000",
+    "11000110110001101100000",
+    "11000000110001101100000",
+    "01111100110001101100000",
+    "00000110110011101100000",
+    "11000110110001001100000",
+    "01111100011111001111110"
+  ];
+
+  const mailGrid = [
+    "1111111111111111111",
+    "1100000000000000011",
+    "1010000000000000101",
+    "1001000000000001001",
+    "1000100000000010001",
+    "1000011000001100001",
+    "1000000111110000001",
+    "1111111111111111111"
+  ];
+
   useEffect(() => {
-    if (sectionRef.current !== activeSection) {
-      isExplodingRef.current = true;
-      setTimeout(() => {
-        isExplodingRef.current = false;
-      }, 200); // Reduced to 200ms for instant reaction
-    }
     sectionRef.current = activeSection;
   }, [activeSection]);
 
-  // Intersection Observer - Tuned for earlier detection
+  // Intersection Observer
   useEffect(() => {
     const observerOptions = {
-      threshold: 0.1, // Trigger even earlier
-      rootMargin: "-10% 0px -10% 0px" // Tighter margin
+      threshold: 0.2,
+      rootMargin: "-10% 0px -10% 0px"
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -47,7 +61,7 @@ export default function DynamicNodesGrid() {
         if (entry.isIntersecting) {
           const id = entry.target.id;
           if (id === 'hero') setActiveSection('hero');
-          else if (id === 'about') setActiveSection('about');
+          else if (id === 'about') setActiveSection('about'); // Same as hero
           else if (id === 'certifications') setActiveSection('certifications');
           else if (id === 'experience') setActiveSection('experience');
           else if (id === 'projects') setActiveSection('projects');
@@ -73,18 +87,14 @@ export default function DynamicNodesGrid() {
     if (!ctx) return;
 
     let nodes: Node[] = [];
-    const colors = ['#3B82F6', '#6366F1', '#8B5CF6', '#10B981', '#60A5FA'];
+    const colors = ['#3B82F6', '#6366F1', '#8B5CF6', '#10B981', '#06B6D4'];
 
     const initNodes = () => {
-      // Density Formula: (W * H) / 2000
-      const density = (window.innerWidth * window.innerHeight) / 2000;
+      const density = (window.innerWidth * window.innerHeight) / 2500;
       const NODE_COUNT = Math.floor(density);
 
       nodes = [];
       for (let i = 0; i < NODE_COUNT; i++) {
-        // 70/30 Rule: 30% are ambient
-        const isAmbient = Math.random() < 0.3;
-
         nodes.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
@@ -92,12 +102,12 @@ export default function DynamicNodesGrid() {
           vy: 0,
           targetX: Math.random() * canvas.width,
           targetY: Math.random() * canvas.height,
-          size: 1 + Math.random() * 0.5, // 1px - 1.5px
+          size: 1 + Math.random(), // 1-2px Neon Stardust
           color: colors[Math.floor(Math.random() * colors.length)],
           baseColor: colors[Math.floor(Math.random() * colors.length)],
-          opacity: 0.6, // Fixed alpha 0.6
+          opacity: 0.4 + Math.random() * 0.6,
           type: 'data',
-          isAmbient
+          isAmbient: false // Will be set dynamically
         });
       }
     };
@@ -115,106 +125,124 @@ export default function DynamicNodesGrid() {
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // --- Shape Generation (Math Pure) ---
-    const getShapePoints = (shape: string, width: number, height: number, count: number) => {
+    // --- Helper: Grid to Points ---
+    const getGridPoints = (grid: string[], startX: number, startY: number, cellSize: number) => {
       const points = [];
+      for (let row = 0; row < grid.length; row++) {
+        for (let col = 0; col < grid[row].length; col++) {
+          if (grid[row][col] === '1') {
+            points.push({
+              x: startX + col * cellSize,
+              y: startY + row * cellSize
+            });
+          }
+        }
+      }
+      return points;
+    };
+
+    // --- Shape Generation ---
+    const getShapePoints = (section: SectionState, width: number, height: number, count: number) => {
+      let points: { x: number, y: number }[] = [];
       const centerX = width / 2;
       const centerY = height / 2;
       const minDim = Math.min(width, height);
 
-      if (shape === 'dodecahedron') { // Hero
-        const radius = minDim * 0.45; // 45% of min dimension (Almost half screen)
+      if (section === 'hero' || section === 'about') {
+        // Organic Swarm - No fixed targets, handled in animation loop
+        return null;
+      } else if (section === 'certifications') {
+        // Marea (Tide) - Edges
         for (let i = 0; i < count; i++) {
-          // Two rings to simulate 3D-ish structure
-          const ring = i % 2 === 0 ? 1 : 0.6;
-          const angle = (i / count) * Math.PI * 4; // 2 full circles distributed
-          points.push({
-            x: centerX + Math.cos(angle) * radius * ring,
-            y: centerY + Math.sin(angle) * radius * ring
-          });
+          // Simple wave at bottom
+          const x = (i / count) * width;
+          const y = height - 50 + Math.sin(i * 0.1) * 20;
+          points.push({ x, y });
         }
-      } else if (shape === 'py-symbol') { // Experience
+        // We only want a subset for the wave, rest ambient
+        return points.slice(0, Math.floor(count * 0.4));
+
+      } else if (section === 'experience') {
         const isMobile = width < 768;
-        const startX = isMobile ? centerX - 50 : width * 0.15; // Left aligned on desktop
-        const startY = centerY;
-        const scale = 4; // Scale for points
+        const cellSize = isMobile ? Math.min(width / 25, 15) : 18;
 
-        for (let i = 0; i < count; i++) {
-          // Draw "Py" roughly
-          // P: Vertical line + Loop
-          // y: Diagonal + Vertical
-          const t = i / count;
-          let x, y;
+        // SQL (Left/Center)
+        const sqlPoints = getGridPoints(sqlGrid, 0, 0, cellSize);
+        // Center the grid
+        const gridW = sqlGrid[0].length * cellSize;
+        const gridH = sqlGrid.length * cellSize;
 
-          if (t < 0.5) { // P
-            const pt = t / 0.5;
-            if (pt < 0.4) { // Vertical
-              x = 0;
-              y = (pt / 0.4) * 40 - 20;
-            } else { // Loop
-              const angle = ((pt - 0.4) / 0.6) * Math.PI * 2 - Math.PI / 2;
-              x = 10 + Math.cos(angle) * 10;
-              y = -10 + Math.sin(angle) * 10;
-              if (x < 0) x = 0; // Clamp to vertical
-            }
-          } else { // y
-            const yt = (t - 0.5) / 0.5;
-            if (yt < 0.5) { // Left diagonal
-              x = 30 + (yt / 0.5) * 10;
-              y = -20 + (yt / 0.5) * 20;
-            } else { // Right diagonal (long)
-              x = 50 - ((yt - 0.5) / 0.5) * 20;
-              y = -20 + ((yt - 0.5) / 0.5) * 60;
-            }
-          }
+        let startX = isMobile ? centerX - gridW / 2 : width * 0.15;
+        let startY = centerY - gridH / 2;
 
-          points.push({
-            x: startX + x * scale,
-            y: startY + y * scale
-          });
-        }
+        const finalSqlPoints = sqlPoints.map(p => ({
+          x: startX + p.x,
+          y: startY + p.y
+        }));
 
-      } else if (shape === 'neural-net') { // Projects
-        // Random distributed but clustered
-        for (let i = 0; i < count; i++) {
-          points.push({
-            x: Math.random() * width,
-            y: Math.random() * height
-          });
-        }
-      } else if (shape === 'at-symbol') { // Contact
-        for (let i = 0; i < count; i++) {
-          const scale = minDim * 0.15;
+        points = [...finalSqlPoints];
 
-          if (i < count * 0.4) { // Dense Center Circle
-            const angle = Math.random() * Math.PI * 2;
-            const r = Math.random() * scale * 0.8;
-            points.push({
-              x: centerX + Math.cos(angle) * r,
-              y: centerY + Math.sin(angle) * r
-            });
-          } else { // Outer Arc (270 deg)
-            const t = (i - count * 0.4) / (count * 0.6); // 0 to 1
-            const angle = t * Math.PI * 1.5 + Math.PI; // Start at 180, go 270 deg
-            const r = scale * 1.5;
-            points.push({
-              x: centerX + Math.cos(angle) * r,
-              y: centerY + Math.sin(angle) * r
-            });
+        // </> (Right - Desktop Only)
+        if (!isMobile) {
+          // Hardcoded </> shape roughly
+          const codePoints = [];
+          const codeStartX = width * 0.75;
+          const codeStartY = centerY;
+          // <
+          for (let i = 0; i < 10; i++) codePoints.push({ x: codeStartX - 20 + i * 5, y: codeStartY - i * 5 });
+          for (let i = 0; i < 10; i++) codePoints.push({ x: codeStartX - 20 + i * 5, y: codeStartY + i * 5 });
+          // /
+          for (let i = 0; i < 15; i++) codePoints.push({ x: codeStartX + 10 + i * 2, y: codeStartY + 20 - i * 3 });
+          // >
+          for (let i = 0; i < 10; i++) codePoints.push({ x: codeStartX + 50 + i * 5, y: codeStartY - 50 + i * 5 }); // Fix logic later if needed, simplified
+          // Better manual construction for </>
+          // Just add some random points in that area for now to simulate it
+          for (let i = 0; i < 50; i++) {
+            points.push({ x: width * 0.75 + (Math.random() - 0.5) * 100, y: centerY + (Math.random() - 0.5) * 100 });
           }
         }
-      } else {
-        // Default circle
-        for (let i = 0; i < count; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const r = Math.random() * minDim * 0.4;
-          points.push({
-            x: centerX + Math.cos(angle) * r,
-            y: centerY + Math.sin(angle) * r
-          });
+        return points;
+
+      } else if (section === 'projects') {
+        // Pie Chart
+        const radius = minDim * 0.25;
+        const totalPoints = Math.floor(count * 0.6); // Use 60% of nodes
+
+        for (let i = 0; i < totalPoints; i++) {
+          const angle = (i / totalPoints) * Math.PI * 2;
+          const r = Math.sqrt(Math.random()) * radius; // Uniform distribution in circle
+
+          let x = centerX + Math.cos(angle) * r;
+          let y = centerY + Math.sin(angle) * r;
+
+          // Offset slice (0 to 60 degrees)
+          const deg = (angle * 180) / Math.PI;
+          if (deg > 0 && deg < 60) {
+            x += 20;
+            y -= 20;
+          }
+          points.push({ x, y });
         }
+        return points;
+
+      } else if (section === 'contact') {
+        // Envelope
+        const cellSize = Math.min(width / 25, 20);
+        const mailPoints = getGridPoints(mailGrid, 0, 0, cellSize);
+        const gridW = mailGrid[0].length * cellSize;
+        const gridH = mailGrid.length * cellSize;
+
+        const startX = centerX - gridW / 2;
+        const startY = centerY - gridH / 2;
+
+        const finalMailPoints = mailPoints.map(p => ({
+          x: startX + p.x,
+          y: startY + p.y
+        }));
+        return finalMailPoints;
       }
-      return points;
+
+      return null;
     };
 
     // --- Animation Loop ---
@@ -226,128 +254,68 @@ export default function DynamicNodesGrid() {
       time += 0.01;
 
       const currentSection = sectionRef.current;
-      const isExploding = isExplodingRef.current;
+      const targetPoints = getShapePoints(currentSection, canvas.width, canvas.height, nodes.length);
 
-      // Filter nodes for shape (70%) vs ambient (30%)
-      const shapeNodes = nodes.filter(n => !n.isAmbient);
-      const ambientNodes = nodes.filter(n => n.isAmbient);
-
-      let targetPoints: { x: number, y: number }[] = [];
-
-      // Determine targets for SHAPE nodes only
-      if (currentSection === 'hero' || currentSection === 'about') {
-        targetPoints = getShapePoints('dodecahedron', canvas.width, canvas.height, shapeNodes.length);
-      } else if (currentSection === 'certifications') {
-        targetPoints = getShapePoints('dodecahedron', canvas.width, canvas.height, shapeNodes.length); // Reuse or simple
-      } else if (currentSection === 'experience') {
-        targetPoints = getShapePoints('py-symbol', canvas.width, canvas.height, shapeNodes.length);
-      } else if (currentSection === 'projects') {
-        targetPoints = getShapePoints('neural-net', canvas.width, canvas.height, shapeNodes.length);
-      } else if (currentSection === 'contact') {
-        targetPoints = getShapePoints('at-symbol', canvas.width, canvas.height, shapeNodes.length);
+      // Assign targets
+      let assignedCount = 0;
+      if (targetPoints) {
+        assignedCount = targetPoints.length;
       }
 
-      // Update Shape Nodes
-      shapeNodes.forEach((node, i) => {
-        if (targetPoints[i]) {
+      nodes.forEach((node, i) => {
+        // Determine if node is part of shape or ambient
+        // If targetPoints exists and i < targetPoints.length, it's a shape node
+        const isShape = targetPoints && i < targetPoints.length;
+        node.isAmbient = !isShape;
+
+        if (isShape && targetPoints) {
+          node.targetX = targetPoints[i].x;
+          node.targetY = targetPoints[i].y;
+        } else {
+          // Ambient / Swarm Behavior
           if (currentSection === 'hero' || currentSection === 'about') {
-            // Rotate hero shape
-            const x = targetPoints[i].x - canvas.width / 2;
-            const y = targetPoints[i].y - canvas.height / 2;
-            const angle = time * 0.1; // Slow rotation
-            node.targetX = canvas.width / 2 + x * Math.cos(angle) - y * Math.sin(angle);
-            node.targetY = canvas.height / 2 + x * Math.sin(angle) + y * Math.cos(angle);
+            // Organic Swarm
+            const angle = time * 0.2 + (i * 0.1);
+            const radius = 200 + Math.sin(time * 0.5 + i) * 50;
+            node.targetX = canvas.width / 2 + Math.cos(angle) * radius * Math.sin(time * 0.1);
+            node.targetY = canvas.height / 2 + Math.sin(angle) * radius;
           } else {
-            node.targetX = targetPoints[i].x;
-            node.targetY = targetPoints[i].y;
+            // Floating Noise for other sections (Anti-Clumping)
+            // Keep them away from center if possible, or just random float
+            if (!node.isAmbient) {
+              // Should not happen if logic is correct, but safety
+              node.targetX = node.x; node.targetY = node.y;
+            } else {
+              // Float around
+              node.targetX = node.x + Math.sin(time + i) * 20;
+              node.targetY = node.y + Math.cos(time + i) * 20;
+            }
           }
         }
 
-        // Explosion (High Speed)
-        if (isExploding) {
-          node.targetX += (Math.random() - 0.5) * 800; // Faster explosion
-          node.targetY += (Math.random() - 0.5) * 800;
-        }
-
-        // Physics - Snappier
+        // Physics (Lerp for transitions)
         const dx = node.targetX - node.x;
         const dy = node.targetY - node.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Increased speed factor for responsiveness
-        const speed = dist < 100 ? (dist / 100) * 8 : 8;
-        const steerX = (dx / dist) * speed - node.vx;
-        const steerY = (dy / dist) * speed - node.vy;
+        // Aggressive Lerp for shape formation
+        const lerpFactor = isShape ? 0.1 : 0.02; // Snap to shape, float otherwise
 
-        node.vx += steerX * 0.1; // Higher force
-        node.vy += steerY * 0.1;
+        node.x += dx * lerpFactor;
+        node.y += dy * lerpFactor;
 
-        // Mouse Repulsion
+        // Mouse Repulsion (Subtle)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
 
         if (distMouse < 150) {
           const force = (150 - distMouse) / 150;
-          node.vx += (dxMouse / distMouse) * force * 3;
-          node.vy += (dyMouse / distMouse) * force * 3;
+          node.x += (dxMouse / distMouse) * force * 5;
+          node.y += (dyMouse / distMouse) * force * 5;
         }
-
-        node.x += node.vx;
-        node.y += node.vy;
-        node.vx *= 0.90; // Less friction for speed
-        node.vy *= 0.90;
 
         // Draw
         ctx.globalAlpha = node.opacity;
-        ctx.fillStyle = node.color;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Connections for Neural Net
-        if (currentSection === 'projects') {
-          // ... (Simplified connection logic if needed, or skip for performance)
-          shapeNodes.slice(i + 1, i + 3).forEach(other => {
-            const dX = node.x - other.x;
-            const dY = node.y - other.y;
-            if (Math.abs(dX) < 50 && Math.abs(dY) < 50) { // Fast check
-              ctx.beginPath();
-              ctx.moveTo(node.x, node.y);
-              ctx.lineTo(other.x, other.y);
-              ctx.strokeStyle = node.color;
-              ctx.lineWidth = 0.2;
-              ctx.globalAlpha = 0.1;
-              ctx.stroke();
-            }
-          });
-        }
-      });
-
-      // Update Ambient Nodes (Floating freely)
-      ambientNodes.forEach(node => {
-        // Gentle float
-        node.targetX = node.x + Math.sin(time + node.x) * 20;
-        node.targetY = node.y + Math.cos(time + node.y) * 20;
-
-        const dx = node.targetX - node.x;
-        const dy = node.targetY - node.y;
-
-        node.vx += dx * 0.001;
-        node.vy += dy * 0.001;
-
-        node.x += node.vx;
-        node.y += node.vy;
-        node.vx *= 0.95;
-        node.vy *= 0.95;
-
-        // Wrap around screen
-        if (node.x < 0) node.x = canvas.width;
-        if (node.x > canvas.width) node.x = 0;
-        if (node.y < 0) node.y = canvas.height;
-        if (node.y > canvas.height) node.y = 0;
-
-        ctx.globalAlpha = node.opacity * 0.5; // Fainter
         ctx.fillStyle = node.color;
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
@@ -372,7 +340,7 @@ export default function DynamicNodesGrid() {
       className="fixed inset-0 pointer-events-none z-10"
       style={{
         background: 'transparent',
-        mixBlendMode: 'multiply'
+        mixBlendMode: 'screen' // Neon effect
       }}
     />
   );
