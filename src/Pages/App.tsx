@@ -13,6 +13,7 @@ import CookieBanner from '../components/CookieBanner';
 import AndyChat from '../components/AndyChat';
 import DynamicNodesGrid from '../components/DynamicNodesGrid';
 import FloatingParticles from '../components/FloatingParticles';
+import SEO from '../components/SEO';
 import { translations } from '../translations';
 // Migración eliminada - usando fullFirebaseManager
 
@@ -61,6 +62,7 @@ function App() {
     <div className="min-h-screen relative" style={{
       background: 'linear-gradient(180deg, #DBEAFE 0%, #E0F2FE 8%, #F0F9FF 16%, #F8FAFC 24%, #F1F5F9 32%, #F8FAFC 40%, #F1F5F9 48%, #EEF2FF 56%, #E0E7FF 64%, #DDD6FE 72%, #C4B5FD 80%, #A78BFA 88%, #7C3AED 96%, #6D28D9 100%)'
     }}>
+      <SEO />
       <DynamicNodesGrid />
       <FloatingParticles />
       {/* <TrustIndicators /> */}
@@ -75,7 +77,9 @@ function App() {
         <CertificationsSection language={language} />
         <ExperienceSection t={t} language={language} />
         <ProjectsSection t={t} language={language} />
-        <BlogSection />
+        <section id="blog">
+          <BlogSection t={t} language={language} />
+        </section>
         <UnifiedContactSection language={language} />
         <Footer t={t} />
       </div>

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "flowise": "^3.0.10",
+    "turndown": "^7.2.2"
+  }
+}

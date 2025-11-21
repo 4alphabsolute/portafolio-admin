@@ -16,8 +16,6 @@ interface Node {
 export default function DynamicNodesGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -258,6 +256,7 @@ export default function DynamicNodesGrid() {
     };
 
     let time = 0;
+    let animationFrameId: number;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -363,7 +362,7 @@ export default function DynamicNodesGrid() {
         });
       });
 
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
     };
 
     // Scroll listener para transición fluida
@@ -377,6 +376,7 @@ export default function DynamicNodesGrid() {
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animationFrameId);
     };
   }, []);
 

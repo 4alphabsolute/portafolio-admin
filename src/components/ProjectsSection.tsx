@@ -13,6 +13,7 @@ interface Project {
   liveUrl?: string;
   githubUrl?: string;
   imageUrl?: string;
+  visibility?: 'public' | 'draft';
   status?: 'completed' | 'in-progress' | 'planned';
 }
 
@@ -32,7 +33,7 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
         const firebaseProjects = await getFirebaseData('projects') as Project[];
         const translatedProjects = firebaseProjects.map(project =>
           translateDynamicContent(project, language)
-        );
+        ).filter(project => project.visibility !== 'draft');
         setProjects(translatedProjects);
       } catch (error) {
         console.error('Error cargando proyectos:', error);
