@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 // --- CONFIGURACIÓN CORPORATE TECH ---
 const COLORS = {
   BLUE: '59, 130, 246',   // Royal Blue (#3B82F6) - Hero
+  CYAN: '34, 211, 238',   // Cyberpunk Cyan (#22D3EE) - Circuit glow
   VIOLET: '124, 58, 237', // Corporate Violet (#7C3AED) - Network
 };
 
@@ -16,8 +17,9 @@ interface Particle {
   targetSize: number;
   currentSize: number;
   colorRGB: string;
-  circuitDir: 'horizontal' | 'vertical'; // Para modo circuito
-  pulsePhase: number; // Para efectos de parpadeo
+  circuitDir: 'horizontal' | 'vertical';
+  pulsePhase: number;
+  isPulseNode: boolean; // Para nodos que pulsan en circuito
 }
 
 const DynamicNodesGrid: React.FC = () => {
@@ -27,13 +29,12 @@ const DynamicNodesGrid: React.FC = () => {
   const mouse = useRef({ x: -1000, y: -1000 });
   const animationRef = useRef<number>();
 
-  // --- 1. DETECTOR DE SECCIONES (El Cerebro) ---
+  // --- 1. DETECTOR DE SECCIONES ---
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const id = entry.target.id;
-          // Mapeo de secciones a modos visuales
           if (id === 'hero' || id === 'about') {
             setVisualMode('circuit');
           } else if (id === 'experience' || id === 'projects' || id === 'certifications') {
@@ -64,9 +65,8 @@ const DynamicNodesGrid: React.FC = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
 
-      // Densidad Moderada/Baja (Limpieza > Saturación)
-      // Desktop: 1 partícula cada 9000px² | Mobile: 1 cada 5000px²
-      const densityDivisor = window.innerWidth < 768 ? 5000 : 9000;
+      // DENSIDAD REDUCIDA ~40% (15000 en lugar de 9000)
+      const densityDivisor = window.innerWidth < 768 ? 8000 : 15000;
       const count = Math.floor((canvas.width * canvas.height) / densityDivisor);
 
       const newParticles: Particle[] = [];
@@ -80,7 +80,8 @@ const DynamicNodesGrid: React.FC = () => {
           currentSize: 2,
           colorRGB: COLORS.BLUE,
           circuitDir: Math.random() > 0.5 ? 'horizontal' : 'vertical',
-          pulsePhase: Math.random() * Math.PI * 2
+          pulsePhase: Math.random() * Math.PI * 2,
+          isPulseNode: Math.random() < 0.15 // 15% son nodos que pulsan
         });
       }
       particles.current = newParticles;
@@ -94,7 +95,6 @@ const DynamicNodesGrid: React.FC = () => {
       const w = canvas.width;
       const h = canvas.height;
 
-      // Configuración según modo
       let targetColor = COLORS.BLUE;
       let connectionDist = 0;
       let speedMult = 1;
@@ -102,61 +102,50 @@ const DynamicNodesGrid: React.FC = () => {
 
       if (visualMode === 'circuit') {
         targetColor = COLORS.BLUE;
-        connectionDist = 100; // Conexiones largas pero estrictas
-        speedMult = 1.2;      // Rápido y constante
-        targetBaseSize = 2;   // Pequeños y precisos
+        connectionDist = 120;
+        speedMult = 1.2;
+        targetBaseSize = 2;
       } else if (visualMode === 'network') {
         targetColor = COLORS.VIOLET;
-        connectionDist = 150; // Red amplia
-        speedMult = 0.6;      // Orgánico y suave
-        targetBaseSize = 4;   // Grandes y pesados (3px-6px range logic below)
+        connectionDist = 140;
+        speedMult = 0.6;
+        targetBaseSize = 4;
       } else if (visualMode === 'floating') {
-        targetColor = COLORS.BLUE; // O Violeta, latente
-        connectionDist = 0;   // Sin conexiones
-        speedMult = 0.2;      // Muy lento
+        targetColor = COLORS.BLUE;
+        connectionDist = 0;
+        speedMult = 0.2;
         targetBaseSize = 2;
       }
 
       particles.current.forEach((p, i) => {
-        // --- A. TRANSICIONES SUAVES (LERP) ---
-        // Tamaño
-        const sizeVariation = (Math.sin(p.pulsePhase) + 1) * 0.5; // 0 a 1
+        // --- A. TRANSICIONES SUAVES ---
+        const sizeVariation = (Math.sin(p.pulsePhase) + 1) * 0.5;
         const finalTargetSize = visualMode === 'network'
-          ? targetBaseSize + sizeVariation * 2 // 4px a 6px
+          ? targetBaseSize + sizeVariation * 2
           : targetBaseSize;
 
         p.currentSize += (finalTargetSize - p.currentSize) * 0.05;
         p.pulsePhase += 0.05;
-
-        // Color (Simple switch for now, could be lerped but RGB string is tricky without parsing)
         p.colorRGB = targetColor;
 
         // --- B. MOVIMIENTO ---
         if (visualMode === 'circuit') {
-          // Movimiento Manhattan (Robótico)
-          // Cambio de dirección aleatorio pero poco frecuente
           if (Math.random() < 0.01) {
             p.circuitDir = p.circuitDir === 'horizontal' ? 'vertical' : 'horizontal';
           }
-
           if (p.circuitDir === 'horizontal') {
-            p.x += (p.vx > 0 ? 1 : -1) * speedMult; // Velocidad constante
-            // Corrección de Y para mantener líneas rectas perfectas
-            // (Opcional: Snap to grid, pero por ahora solo no mover Y)
+            p.x += (p.vx > 0 ? 1 : -1) * speedMult;
           } else {
             p.y += (p.vy > 0 ? 1 : -1) * speedMult;
           }
         } else {
-          // Movimiento Orgánico (Network/Floating)
           p.x += p.vx * speedMult;
           p.y += p.vy * speedMult;
         }
 
-        // Rebote
         if (p.x < 0 || p.x > w) p.vx *= -1;
         if (p.y < 0 || p.y > h) p.vy *= -1;
 
-        // Mouse (Sutil)
         const dx = mouse.current.x - p.x;
         const dy = mouse.current.y - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -166,10 +155,25 @@ const DynamicNodesGrid: React.FC = () => {
         }
 
         // --- C. DIBUJADO DE NODOS ---
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.currentSize, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.colorRGB}, ${visualMode === 'network' ? 0.6 : 0.8})`;
-        ctx.fill();
+        // Efecto Cyberpunk en modo circuito
+        if (visualMode === 'circuit' && p.isPulseNode) {
+          const pulseIntensity = (Math.sin(p.pulsePhase * 2) + 1) * 0.5;
+          // Glow exterior
+          ctx.shadowBlur = 8 * pulseIntensity;
+          ctx.shadowColor = `rgba(${COLORS.CYAN}, ${pulseIntensity * 0.8})`;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.currentSize * (1 + pulseIntensity * 0.3), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${COLORS.CYAN}, ${0.6 + pulseIntensity * 0.4})`;
+          ctx.fill();
+
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.currentSize, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.colorRGB}, ${visualMode === 'network' ? 0.6 : 0.8})`;
+          ctx.fill();
+        }
 
         // --- D. CONEXIONES ---
         if (connectionDist > 0) {
@@ -178,7 +182,6 @@ const DynamicNodesGrid: React.FC = () => {
             const dx = p.x - p2.x;
             const dy = p.y - p2.y;
 
-            // Optimización: Check rápido de caja
             if (Math.abs(dx) > connectionDist || Math.abs(dy) > connectionDist) continue;
 
             const distSq = dx * dx + dy * dy;
@@ -187,24 +190,35 @@ const DynamicNodesGrid: React.FC = () => {
               const alpha = 1 - dist / connectionDist;
 
               if (visualMode === 'circuit') {
-                // Solo conectar si están alineados en X o Y (con margen de error)
-                const alignmentThreshold = 2.0; // 2px de tolerancia
+                const alignmentThreshold = 2.0;
                 if (Math.abs(dx) < alignmentThreshold || Math.abs(dy) < alignmentThreshold) {
                   ctx.beginPath();
                   ctx.moveTo(p.x, p.y);
                   ctx.lineTo(p2.x, p2.y);
-                  ctx.strokeStyle = `rgba(${p.colorRGB}, ${alpha * 0.5})`;
-                  ctx.lineWidth = 1;
+
+                  // Líneas con glow sutil si conectan nodos pulsantes
+                  if (p.isPulseNode || p2.isPulseNode) {
+                    ctx.strokeStyle = `rgba(${COLORS.CYAN}, ${alpha * 0.4})`;
+                    ctx.lineWidth = 1.2;
+                  } else {
+                    ctx.strokeStyle = `rgba(${p.colorRGB}, ${alpha * 0.5})`;
+                    ctx.lineWidth = 1;
+                  }
                   ctx.stroke();
                 }
               } else {
-                // Red Neuronal: Conexión directa
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p2.x, p2.y);
-                ctx.strokeStyle = `rgba(${p.colorRGB}, ${alpha * 0.3})`;
-                ctx.lineWidth = 0.5;
-                ctx.stroke();
+                // Patrón hexagonal sutil para redes
+                const angle = Math.atan2(dy, dx);
+                const hexBias = Math.abs(Math.sin(angle * 3)) > 0.7; // Favorece ángulos de 60°
+
+                if (hexBias || Math.random() < 0.3) { // 30% de conexiones aleatorias
+                  ctx.beginPath();
+                  ctx.moveTo(p.x, p.y);
+                  ctx.lineTo(p2.x, p2.y);
+                  ctx.strokeStyle = `rgba(${p.colorRGB}, ${alpha * 0.25})`;
+                  ctx.lineWidth = 0.5;
+                  ctx.stroke();
+                }
               }
             }
           }
@@ -216,7 +230,6 @@ const DynamicNodesGrid: React.FC = () => {
 
     animate();
 
-    // Listeners
     const handleResize = () => initParticles();
     const handleMouseMove = (e: MouseEvent) => {
       mouse.current.x = e.clientX;
