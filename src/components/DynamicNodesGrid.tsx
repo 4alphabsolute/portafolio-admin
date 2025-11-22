@@ -48,11 +48,11 @@ export default function DynamicNodesGrid() {
       if (heroImg) {
         const rect = heroImg.getBoundingClientRect();
         zones.push({
-          x: rect.left - 100, // Halo más grande
+          x: rect.left - 100,
           y: rect.top - 100,
           width: rect.width + 200,
           height: rect.height + 200,
-          isHero: true // Marcador especial para hero
+          isHero: true
         });
       }
 
@@ -112,7 +112,6 @@ export default function DynamicNodesGrid() {
     // Configuración inteligente basada en contenido
     const getConfigForPosition = (scrollProgress: number) => {
       const density = detectContentDensity();
-      // Hero (0-20%): Estilo cibernético/simulación IA
       if (scrollProgress < 0.2) {
         return {
           nodeCount: 14,
@@ -125,7 +124,6 @@ export default function DynamicNodesGrid() {
           behavior: 'cybernetic'
         };
       }
-      // About/Certificaciones (20-40%): Transición suave
       else if (scrollProgress < 0.4) {
         const t = (scrollProgress - 0.2) / 0.2;
         const certDensity = Math.max(density.certifications, 3);
@@ -144,7 +142,6 @@ export default function DynamicNodesGrid() {
           behavior: 'transitioning'
         };
       }
-      // Experiencia (40-60%): Muy calmados y respetuosos
       else if (scrollProgress < 0.6) {
         const expDensity = Math.max(density.experience, 2);
         const nodeCount = Math.max(8 - expDensity, 3);
@@ -160,7 +157,6 @@ export default function DynamicNodesGrid() {
           behavior: 'respectful'
         };
       }
-      // Proyectos (60-80%): Transición hacia violetas
       else if (scrollProgress < 0.8) {
         const t = (scrollProgress - 0.6) / 0.2;
         const projDensity = Math.max(density.projects, 2);
@@ -180,7 +176,6 @@ export default function DynamicNodesGrid() {
           behavior: 'awakening'
         };
       }
-      // Contacto (80-100%): Asentados y expectantes
       else {
         return {
           nodeCount: 8,
@@ -195,14 +190,12 @@ export default function DynamicNodesGrid() {
       }
     };
 
-    // Detectar progreso de scroll para transición fluida
     const getScrollProgress = () => {
       const scrollY = window.scrollY;
       const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
       return Math.min(scrollY / documentHeight, 1);
     };
 
-    // Verificar si un punto está en zona de exclusión
     const isInExclusionZone = (x: number, y: number, zones: any[]) => {
       return zones.some(zone =>
         x >= zone.x && x <= zone.x + zone.width &&
@@ -210,12 +203,10 @@ export default function DynamicNodesGrid() {
       );
     };
 
-    // Crear nodos inteligentes que respetan contenido
     const nodes: Node[] = [];
     const createNodes = (config: any) => {
       const exclusionZones = config.respectZones ? getExclusionZones() : [];
 
-      // Ajustar cantidad gradualmente
       while (nodes.length > config.nodeCount) {
         nodes.pop();
       }
@@ -223,7 +214,6 @@ export default function DynamicNodesGrid() {
       while (nodes.length < config.nodeCount) {
         let x, y, attempts = 0;
 
-        // Intentar encontrar posición que no interfiera con contenido
         do {
           x = Math.random() * canvas.width;
           y = Math.random() * canvas.height;
@@ -245,20 +235,16 @@ export default function DynamicNodesGrid() {
       }
     };
 
-    // Inicializar con configuración por defecto
     let currentConfig = getConfigForPosition(0);
     createNodes(currentConfig);
 
-    // Nodos circulares tipo red neuronal/base de datos
     const drawNeuralNode = (node: Node, breathe: number) => {
       const radius = node.size * breathe;
 
-      // Núcleo del nodo
       ctx.beginPath();
       ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Anillo exterior sutil
       ctx.beginPath();
       ctx.arc(node.x, node.y, radius + 1, 0, Math.PI * 2);
       ctx.strokeStyle = node.color;
@@ -272,20 +258,16 @@ export default function DynamicNodesGrid() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       time += 0.01;
 
-      // Transición fluida basada en scroll
       const scrollProgress = getScrollProgress();
       const currentConfig = getConfigForPosition(scrollProgress);
 
-      // Actualizar nodos gradualmente
       if (Math.random() < 0.1) {
         createNodes(currentConfig);
       }
 
-      // Animar nodos con comportamientos especiales
       const exclusionZones = currentConfig.respectZones ? getExclusionZones() : [];
 
       nodes.forEach((node, index) => {
-        // Comportamientos cibernéticos suaves
         if (node.behavior === 'cybernetic') {
           node.pulse += 0.01;
           const variation = Math.sin(node.pulse) * 0.1;
@@ -297,7 +279,6 @@ export default function DynamicNodesGrid() {
           node.vx += transition * 0.003;
           node.vy += transition * 0.003;
         } else if (node.behavior === 'respectful') {
-          // RESPETO ESTRICTO de zonas de exclusión
           const futureX = node.x + node.vx * 10;
           const futureY = node.y + node.vy * 10;
 
@@ -320,27 +301,26 @@ export default function DynamicNodesGrid() {
           node.vy += settled * 0.001;
         }
 
-        // INTERACCIÓN CON MOUSE - Repulsión
+        // INTERACCIÓN CON MOUSE - Repulsión SUTIL (como mano en agua)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
 
-        if (distMouse < 120) { // Radio de repulsión
-          const force = (120 - distMouse) / 120;
-          node.vx += (dxMouse / distMouse) * force * 4; // Fuerza de repulsión
-          node.vy += (dyMouse / distMouse) * force * 4;
+        if (distMouse < 150) {
+          const force = (150 - distMouse) / 150;
+          // Fuerza MUY suave - efecto coqueto y armónico
+          node.vx += (dxMouse / distMouse) * force * 0.8;
+          node.vy += (dyMouse / distMouse) * force * 0.8;
         }
 
-        // Movimiento básico
         node.x += node.vx;
         node.y += node.vy;
         node.pulse += 0.02;
 
-        // Rebote en bordes
         if (node.x <= 0 || node.x >= canvas.width) node.vx *= -1;
         if (node.y <= 0 || node.y >= canvas.height) node.vy *= -1;
 
-        // REPULSIÓN EXTRA FUERTE EN ZONAS HERO
+        // REPULSIÓN SUAVE PERO FIRME EN ZONAS HERO
         exclusionZones.forEach((zone: any) => {
           if (zone.isHero) {
             const zoneCenterX = zone.x + zone.width / 2;
@@ -352,21 +332,19 @@ export default function DynamicNodesGrid() {
 
             if (distZone < repelRadius) {
               const repelForce = (repelRadius - distZone) / repelRadius;
-              node.vx += (dxZone / distZone) * repelForce * 8; // Fuerza muy fuerte
-              node.vy += (dyZone / distZone) * repelForce * 8;
+              // Fuerza firme pero armónica - reducida de x8 a x2
+              node.vx += (dxZone / distZone) * repelForce * 2;
+              node.vy += (dyZone / distZone) * repelForce * 2;
             }
           }
         });
 
-        // Sin pulsaciones - estilo cibernético limpio
         const breathe = 1;
 
-        // Dibujar nodo neuronal
         ctx.globalAlpha = node.opacity;
         ctx.fillStyle = node.color;
         drawNeuralNode(node, breathe);
 
-        // Conexiones dinámicas
         nodes.slice(index + 1).forEach(otherNode => {
           const dx = node.x - otherNode.x;
           const dy = node.y - otherNode.y;
@@ -395,7 +373,6 @@ export default function DynamicNodesGrid() {
       requestAnimationFrame(animate);
     };
 
-    // Scroll listener para transición fluida
     const handleScroll = () => {
       // La transición se maneja automáticamente en animate()
     };
