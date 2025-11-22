@@ -1,328 +1,271 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
-interface Node {
+// --- MATRICES DE GRILLA (Plantillas "Stencil") ---
+// 1 = Punto, 0 = Vacío. Diseñadas para verse "Bold".
+
+const SQL_GRID = [
+  "01111100011111001100000",
+  "11000110110001101100000",
+  "11000000110001101100000",
+  "01111100110001101100000",
+  "00000110110011101100000",
+  "11000110110001001100000",
+  "01111100011111001111110"
+];
+
+const CODE_GRID = [
+  "00110000001100",
+  "01100000000110",
+  "11000011000011",
+  "01100000000110",
+  "00110000001100"
+];
+
+const MAIL_GRID = [
+  "111111111111111111111",
+  "110000000000000000011",
+  "101000000000000000101",
+  "100100000000000001001",
+  "100010000000000010001",
+  "100001000000000100001",
+  "100000100000001000001",
+  "100000010000010000001",
+  "100000001111100000001",
+  "111111111111111111111"
+];
+
+interface Particle {
   x: number;
   y: number;
   vx: number;
   vy: number;
-  targetX: number;
-  targetY: number;
+  targetX: number | null;
+  targetY: number | null;
+  baseX: number; // Para el modo orgánico
+  baseY: number; // Para el modo orgánico
+  angle: number; // Para orbitar
+  speed: number;
   size: number;
-  color: string;
-  baseColor: string;
-  opacity: number;
-  type: 'data' | 'finance' | 'tech' | 'innovation';
-  isAmbient: boolean;
 }
 
-type SectionState = 'hero' | 'about' | 'certifications' | 'experience' | 'projects' | 'contact';
-
-export default function DynamicNodesGrid() {
+const DynamicNodesGrid: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: -1000, y: -1000 });
-  const [activeSection, setActiveSection] = useState<SectionState>('hero');
-  const sectionRef = useRef<SectionState>('hero');
+  const [activeSection, setActiveSection] = useState<string>('hero');
+  const particles = useRef<Particle[]>([]);
+  const mouse = useRef({ x: -1000, y: -1000 });
 
-  // Matrices for Stencils
-  const sqlGrid = [
-    "01111100011111001100000",
-    "11000110110001101100000",
-    "11000000110001101100000",
-    "01111100110001101100000",
-    "00000110110011101100000",
-    "11000110110001001100000",
-    "01111100011111001111110"
-  ];
-
-  const mailGrid = [
-    "1111111111111111111",
-    "1100000000000000011",
-    "1010000000000000101",
-    "1001000000000001001",
-    "1000100000000010001",
-    "1000011000001100001",
-    "1000000111110000001",
-    "1111111111111111111"
-  ];
-
+  // --- 1. DETECCIÓN DE SECCIONES ---
   useEffect(() => {
-    sectionRef.current = activeSection;
-  }, [activeSection]);
-
-  // Intersection Observer
-  useEffect(() => {
-    const observerOptions = {
-      threshold: 0.2,
-      rootMargin: "-10% 0px -10% 0px"
-    };
+    const sections = ['hero', 'about', 'certifications', 'experience', 'projects', 'contact'];
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const id = entry.target.id;
-          if (id === 'hero') setActiveSection('hero');
-          else if (id === 'about') setActiveSection('about');
-          else if (id === 'certifications') setActiveSection('certifications');
-          else if (id === 'experience') setActiveSection('experience');
-          else if (id === 'projects') setActiveSection('projects');
-          else if (id === 'contact') setActiveSection('contact');
+          // Si estamos en 'about', tratamos como 'hero' para continuidad
+          const id = entry.target.id === 'about' ? 'hero' : entry.target.id;
+          console.log("Cambio de sección a:", id);
+          setActiveSection(id);
         }
       });
-    }, observerOptions);
+    }, { threshold: 0.25 }); // 25% visible para cambiar
 
-    const sections = ['hero', 'about', 'certifications', 'experience', 'projects', 'contact'];
     sections.forEach(id => {
-      const element = document.getElementById(id);
-      if (element) observer.observe(element);
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
     });
 
     return () => observer.disconnect();
   }, []);
 
+  // --- 2. CONFIGURACIÓN DEL CANVAS ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let nodes: Node[] = [];
-
-    // Palettes
-    const darkPalette = ['#1e3a8a', '#4c1d95', '#0f172a', '#312e81']; // For light sections
-    const lightPalette = ['#60a5fa', '#a78bfa', '#34d399', '#f472b6']; // For dark sections
-
-    const initNodes = () => {
-      const density = (window.innerWidth * window.innerHeight) / 2500;
-      const NODE_COUNT = Math.floor(density);
-
-      nodes = [];
-      for (let i = 0; i < NODE_COUNT; i++) {
-        const color = darkPalette[Math.floor(Math.random() * darkPalette.length)];
-        nodes.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: 0,
-          vy: 0,
-          targetX: Math.random() * canvas.width,
-          targetY: Math.random() * canvas.height,
-          size: 1.5 + Math.random() * 1.5, // Slightly larger (1.5-3px)
-          color: color,
-          baseColor: color,
-          opacity: 0.6 + Math.random() * 0.4,
-          type: 'data',
-          isAmbient: false
-        });
-      }
-    };
-
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initNodes();
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-
-    // --- Helper: Grid to Points ---
-    const getGridPoints = (grid: string[], startX: number, startY: number, cellSize: number) => {
-      const points = [];
-      for (let row = 0; row < grid.length; row++) {
-        for (let col = 0; col < grid[row].length; col++) {
-          if (grid[row][col] === '1') {
-            points.push({
-              x: startX + col * cellSize,
-              y: startY + row * cellSize
+    // Función para mapear grilla a puntos
+    const mapGridToTargets = (grid: string[], offsetX: number, offsetY: number, scale: number) => {
+      const targets: { x: number, y: number }[] = [];
+      grid.forEach((row, rowIndex) => {
+        for (let i = 0; i < row.length; i++) {
+          if (row[i] === '1') {
+            targets.push({
+              x: offsetX + (i * scale),
+              y: offsetY + (rowIndex * scale)
             });
           }
         }
-      }
-      return points;
+      });
+      return targets;
     };
 
-    // --- Shape Generation ---
-    const getShapePoints = (section: SectionState, width: number, height: number, count: number) => {
-      let points: { x: number, y: number }[] = [];
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const minDim = Math.min(width, height);
+    // Inicializar Partículas
+    const initParticles = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
 
-      if (section === 'hero' || section === 'about') {
-        return null;
-      } else if (section === 'certifications') {
-        for (let i = 0; i < count; i++) {
-          const x = (i / count) * width;
-          const y = height - 50 + Math.sin(i * 0.1) * 20;
-          points.push({ x, y });
-        }
-        return points.slice(0, Math.floor(count * 0.4));
+      // DENSIDAD: Más alta en desktop, ajustada en móvil
+      const densityDivisor = window.innerWidth < 768 ? 4000 : 2500;
+      const count = Math.floor((canvas.width * canvas.height) / densityDivisor);
 
-      } else if (section === 'experience') {
-        const isMobile = width < 768;
-        const cellSize = isMobile ? Math.min(width / 25, 15) : 18;
+      const newParticles: Particle[] = [];
+      for (let i = 0; i < count; i++) {
+        newParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          targetX: null,
+          targetY: null,
+          baseX: Math.random() * canvas.width,
+          baseY: Math.random() * canvas.height,
+          angle: Math.random() * Math.PI * 2,
+          speed: 0.002 + Math.random() * 0.003,
+          size: Math.random() * 1.5 + 0.5 // Burbujas pequeñas
+        });
+      }
+      particles.current = newParticles;
+    };
 
-        const sqlPoints = getGridPoints(sqlGrid, 0, 0, cellSize);
-        const gridW = sqlGrid[0].length * cellSize;
-        const gridH = sqlGrid.length * cellSize;
+    initParticles();
 
-        let startX = isMobile ? centerX - gridW / 2 : width * 0.15;
-        let startY = centerY - gridH / 2;
+    // --- 3. BUCLE DE ANIMACIÓN ---
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = canvas.width;
+      const h = canvas.height;
+      const isMobile = w < 768;
 
-        const finalSqlPoints = sqlPoints.map(p => ({
-          x: startX + p.x,
-          y: startY + p.y
-        }));
+      // Calcular Targets según la sección
+      let currentTargets: { x: number, y: number }[] = [];
 
-        points = [...finalSqlPoints];
+      if (activeSection === 'experience') {
+        // MODO GRILLA: SQL + CODE
+        const scale = isMobile ? 8 : 12; // Tamaño de puntos
+        // SQL a la izquierda (o centro en móvil)
+        const sqlX = isMobile ? (w / 2 - (SQL_GRID[0].length * scale) / 2) : w * 0.15;
+        const sqlY = h * 0.5 - (SQL_GRID.length * scale) / 2;
+        currentTargets = mapGridToTargets(SQL_GRID, sqlX, sqlY, scale);
 
+        // Code </> a la derecha (solo desktop)
         if (!isMobile) {
-          for (let i = 0; i < 50; i++) {
-            points.push({ x: width * 0.75 + (Math.random() - 0.5) * 100, y: centerY + (Math.random() - 0.5) * 100 });
-          }
+          const codeX = w * 0.75;
+          const codeY = h * 0.5 - (CODE_GRID.length * scale) / 2;
+          const codeTargets = mapGridToTargets(CODE_GRID, codeX, codeY, scale);
+          currentTargets = [...currentTargets, ...codeTargets];
         }
-        return points;
 
-      } else if (section === 'projects') {
-        const radius = minDim * 0.25;
-        const totalPoints = Math.floor(count * 0.6);
-
-        for (let i = 0; i < totalPoints; i++) {
-          const angle = (i / totalPoints) * Math.PI * 2;
-          const r = Math.sqrt(Math.random()) * radius;
+      } else if (activeSection === 'projects') {
+        // MODO GEOMETRÍA: Tarta Cortada
+        const radius = Math.min(w, h) * 0.20;
+        const centerX = w * 0.5;
+        const centerY = h * 0.5;
+        // Generamos un círculo denso
+        const pointsInPie = 300;
+        for (let i = 0; i < pointsInPie; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.sqrt(Math.random()) * radius; // Distribución uniforme
 
           let x = centerX + Math.cos(angle) * r;
           let y = centerY + Math.sin(angle) * r;
 
-          const deg = (angle * 180) / Math.PI;
-          if (deg > 0 && deg < 60) {
-            x += 20;
-            y -= 20;
+          // EL CORTE: Si está entre 0 y 60 grados, moverlo lejos
+          if (angle > 0 && angle < Math.PI / 3) {
+            x += 30;
+            y += 30;
           }
-          points.push({ x, y });
+          currentTargets.push({ x, y });
         }
-        return points;
 
-      } else if (section === 'contact') {
-        const cellSize = Math.min(width / 25, 20);
-        const mailPoints = getGridPoints(mailGrid, 0, 0, cellSize);
-        const gridW = mailGrid[0].length * cellSize;
-        const gridH = mailGrid.length * cellSize;
-
-        const startX = centerX - gridW / 2;
-        const startY = centerY - gridH / 2;
-
-        const finalMailPoints = mailPoints.map(p => ({
-          x: startX + p.x,
-          y: startY + p.y
-        }));
-        return finalMailPoints;
+      } else if (activeSection === 'contact') {
+        // MODO GRILLA: Sobre
+        const scale = isMobile ? 8 : 14;
+        const mailX = w * 0.5 - (MAIL_GRID[0].length * scale) / 2;
+        const mailY = h * 0.5 - (MAIL_GRID.length * scale) / 2;
+        currentTargets = mapGridToTargets(MAIL_GRID, mailX, mailY, scale);
       }
 
-      return null;
-    };
+      // Si estamos en Hero, currentTargets queda vacío (Modo Orgánico)
 
-    // --- Animation Loop ---
-    let time = 0;
-    let animationFrameId: number;
+      // ACTUALIZAR PARTÍCULAS
+      particles.current.forEach((p, i) => {
 
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      time += 0.01;
+        // MODO HÉROE (Orgánico / Google Style)
+        if (activeSection === 'hero' || activeSection === 'about') {
+          // Movimiento orbital con ruido
+          const orbitRadius = Math.min(w, h) * 0.35 + Math.cos(Date.now() * 0.001 + i) * 50;
+          p.targetX = w / 2 + Math.cos(p.angle + Date.now() * p.speed) * orbitRadius;
+          p.targetY = h / 2 + Math.sin(p.angle + Date.now() * p.speed) * orbitRadius * 0.8; // Un poco achatado
 
-      const currentSection = sectionRef.current;
-      const targetPoints = getShapePoints(currentSection, canvas.width, canvas.height, nodes.length);
-
-      // Dynamic Color Logic
-      // Light sections: Hero, About, Certifications -> Dark Particles
-      // Dark sections: Experience, Projects, Contact -> Light Particles
-      const isLightSection = ['hero', 'about', 'certifications'].includes(currentSection);
-      const targetPalette = isLightSection ? darkPalette : lightPalette;
-
-      nodes.forEach((node, i) => {
-        // Color Transition (Lerp)
-        // Simplified: Just pick from target palette occasionally or drift towards it
-        // For performance, we'll just switch baseColor and let it be drawn
-        // To make it smooth, we could interpolate RGB, but switching palette index is cheaper
-        // Let's just re-assign color if it doesn't match the current palette theme roughly
-
-        // Check if current color is in target palette (simple check by hex length or just re-assign)
-        // Better: Store targetColor and lerp. For now, instant switch with fade might be better?
-        // Let's do a gradual shift:
-        if (Math.random() < 0.05) { // 5% chance per frame to switch color to target palette
-          node.color = targetPalette[Math.floor(Math.random() * targetPalette.length)];
+          // Repulsión del mouse fuerte en Hero
+          const dx = p.x - mouse.current.x;
+          const dy = p.y - mouse.current.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            const angle = Math.atan2(dy, dx);
+            p.targetX += Math.cos(angle) * 100;
+            p.targetY += Math.sin(angle) * 100;
+          }
         }
-
-        const isShape = targetPoints && i < targetPoints.length;
-        node.isAmbient = !isShape;
-
-        if (isShape && targetPoints) {
-          node.targetX = targetPoints[i].x;
-          node.targetY = targetPoints[i].y;
-        } else {
-          if (currentSection === 'hero' || currentSection === 'about') {
-            const angle = time * 0.2 + (i * 0.1);
-            const radius = 200 + Math.sin(time * 0.5 + i) * 50;
-            node.targetX = canvas.width / 2 + Math.cos(angle) * radius * Math.sin(time * 0.1);
-            node.targetY = canvas.height / 2 + Math.sin(angle) * radius;
+        // MODO FORMAS (Structured)
+        else {
+          if (i < currentTargets.length) {
+            // Asignar a un punto de la grilla
+            p.targetX = currentTargets[i].x;
+            p.targetY = currentTargets[i].y;
           } else {
-            if (!node.isAmbient) {
-              node.targetX = node.x; node.targetY = node.y;
-            } else {
-              node.targetX = node.x + Math.sin(time + i) * 20;
-              node.targetY = node.y + Math.cos(time + i) * 20;
-            }
+            // ANTI-CLUMPING: Si sobran, flotan libres (Ambiente)
+            // Usamos ruido Perlin simple para que no se queden quietos
+            p.targetX = p.baseX + Math.cos(Date.now() * 0.0005 + i) * 50;
+            p.targetY = p.baseY + Math.sin(Date.now() * 0.0005 + i) * 50;
           }
         }
 
-        const dx = node.targetX - node.x;
-        const dy = node.targetY - node.y;
-        const lerpFactor = isShape ? 0.1 : 0.02;
-
-        node.x += dx * lerpFactor;
-        node.y += dy * lerpFactor;
-
-        const dxMouse = node.x - mouseRef.current.x;
-        const dyMouse = node.y - mouseRef.current.y;
-        const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
-
-        if (distMouse < 150) {
-          const force = (150 - distMouse) / 150;
-          node.x += (dxMouse / distMouse) * force * 5;
-          node.y += (dyMouse / distMouse) * force * 5;
+        // FÍSICA DE MOVIMIENTO (LERP)
+        if (p.targetX !== null && p.targetY !== null) {
+          // Lerp factor: 0.05 para suavidad, 0.1 para rapidez
+          p.x += (p.targetX - p.x) * 0.06;
+          p.y += (p.targetY - p.y) * 0.06;
         }
 
-        ctx.globalAlpha = node.opacity;
-        ctx.fillStyle = node.color;
+        // DIBUJAR
         ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        // Color Azul/Violeta corporativo con opacidad
+        ctx.fillStyle = `rgba(99, 102, 241, ${activeSection === 'hero' ? 0.6 : 0.8})`;
         ctx.fill();
       });
 
-      animationFrameId = requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
     };
 
-    animate();
+    const animationId = requestAnimationFrame(animate);
+
+    // Event Listeners
+    const handleResize = () => initParticles();
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.current.x = e.clientX;
+      mouse.current.y = e.clientY;
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleMouseMove);
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [activeSection]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-10"
-      style={{
-        background: 'transparent',
-        // mixBlendMode removed for better visibility on light backgrounds
-      }}
+      className="fixed top-0 left-0 w-full h-full pointer-events-none z-0"
+      style={{ opacity: 0.8 }} // Sutil
     />
   );
-}
+};
+
+export default DynamicNodesGrid;
