@@ -1,21 +1,23 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-// --- CONFIGURACIÓN DE LA PALETA DE COLORES ---
-// Basada en tu degradado: #7C3AED (Morado vibrante) y #60A5FA (Azul claro)
-const THEME_COLOR_RGB = '124, 58, 237'; // El morado principal
-const PULSE_COLOR_RGB = '96, 165, 250';  // Azul para "chispazos"
+// --- CONFIGURACIÓN CORPORATE TECH ---
+const COLORS = {
+  BLUE: '59, 130, 246',   // Royal Blue (#3B82F6) - Hero
+  VIOLET: '124, 58, 237', // Corporate Violet (#7C3AED) - Network
+};
 
-// Definimos los tipos de comportamiento visual
 type VisualMode = 'circuit' | 'network' | 'floating';
 
 interface Particle {
   x: number;
   y: number;
-  vx: number; // Velocidad X
-  vy: number; // Velocidad Y
-  size: number;
-  pulseTimer: number; // Para efectos de parpadeo en modo circuito
-  circuitDir: 'horizontal' | 'vertical'; // Para restringir movimiento en circuito
+  vx: number;
+  vy: number;
+  targetSize: number;
+  currentSize: number;
+  colorRGB: string;
+  circuitDir: 'horizontal' | 'vertical'; // Para modo circuito
+  pulsePhase: number; // Para efectos de parpadeo
 }
 
 const DynamicNodesGrid: React.FC = () => {
@@ -31,7 +33,7 @@ const DynamicNodesGrid: React.FC = () => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const id = entry.target.id;
-          // Mapeamos las secciones a los modos visuales
+          // Mapeo de secciones a modos visuales
           if (id === 'hero' || id === 'about') {
             setVisualMode('circuit');
           } else if (id === 'experience' || id === 'projects' || id === 'certifications') {
@@ -41,9 +43,8 @@ const DynamicNodesGrid: React.FC = () => {
           }
         }
       });
-    }, { threshold: 0.3 }); // Detectar al 30% de visibilidad
+    }, { threshold: 0.25 });
 
-    // IDs a observar (deben existir en App.tsx)
     ['hero', 'about', 'experience', 'projects', 'certifications', 'contact'].forEach(id => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
@@ -52,7 +53,7 @@ const DynamicNodesGrid: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // --- 2. INICIALIZACIÓN DEL CANVAS ---
+  // --- 2. INICIALIZACIÓN ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -63,20 +64,23 @@ const DynamicNodesGrid: React.FC = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
 
-      // Densidad media: suficiente para hacer redes, no demasiada para saturar
-      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      // Densidad Moderada/Baja (Limpieza > Saturación)
+      // Desktop: 1 partícula cada 9000px² | Mobile: 1 cada 5000px²
+      const densityDivisor = window.innerWidth < 768 ? 5000 : 9000;
+      const count = Math.floor((canvas.width * canvas.height) / densityDivisor);
 
       const newParticles: Particle[] = [];
       for (let i = 0; i < count; i++) {
         newParticles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          // Velocidad base suave
           vx: (Math.random() - 0.5) * 0.5,
           vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 1.5 + 0.5,
-          pulseTimer: Math.random() * 100,
-          circuitDir: Math.random() > 0.5 ? 'horizontal' : 'vertical'
+          targetSize: 2,
+          currentSize: 2,
+          colorRGB: COLORS.BLUE,
+          circuitDir: Math.random() > 0.5 ? 'horizontal' : 'vertical',
+          pulsePhase: Math.random() * Math.PI * 2
         });
       }
       particles.current = newParticles;
@@ -84,109 +88,121 @@ const DynamicNodesGrid: React.FC = () => {
 
     initParticles();
 
-    // --- 3. BUCLE DE ANIMACIÓN PRINCIPAL ---
+    // --- 3. BUCLE DE ANIMACIÓN ---
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const w = canvas.width;
       const h = canvas.height;
 
-      // Ajustes según el modo actual
-      let connectionDistance = 100;
-      let speedMultiplier = 1;
-      let baseOpacity = 0.3;
-      let lineOpacityFactor = 0.15;
+      // Configuración según modo
+      let targetColor = COLORS.BLUE;
+      let connectionDist = 0;
+      let speedMult = 1;
+      let targetBaseSize = 2;
 
       if (visualMode === 'circuit') {
-        speedMultiplier = 1.5; // Más rápido
-        connectionDistance = 80; // Conexiones más cortas
-        baseOpacity = 0.5;
+        targetColor = COLORS.BLUE;
+        connectionDist = 100; // Conexiones largas pero estrictas
+        speedMult = 1.2;      // Rápido y constante
+        targetBaseSize = 2;   // Pequeños y precisos
       } else if (visualMode === 'network') {
-        speedMultiplier = 0.8; // Velocidad media
-        connectionDistance = 120; // Redes más amplias
+        targetColor = COLORS.VIOLET;
+        connectionDist = 150; // Red amplia
+        speedMult = 0.6;      // Orgánico y suave
+        targetBaseSize = 4;   // Grandes y pesados (3px-6px range logic below)
       } else if (visualMode === 'floating') {
-        speedMultiplier = 0.3; // Muy lento
-        connectionDistance = 0; // Sin líneas (o casi invisibles)
-        baseOpacity = 0.2;
+        targetColor = COLORS.BLUE; // O Violeta, latente
+        connectionDist = 0;   // Sin conexiones
+        speedMult = 0.2;      // Muy lento
+        targetBaseSize = 2;
       }
 
-      // ACTUALIZAR Y DIBUJAR PUNTOS
       particles.current.forEach((p, i) => {
-        p.pulseTimer++;
+        // --- A. TRANSICIONES SUAVES (LERP) ---
+        // Tamaño
+        const sizeVariation = (Math.sin(p.pulsePhase) + 1) * 0.5; // 0 a 1
+        const finalTargetSize = visualMode === 'network'
+          ? targetBaseSize + sizeVariation * 2 // 4px a 6px
+          : targetBaseSize;
 
-        // FÍSICA DEL MOVIMIENTO
+        p.currentSize += (finalTargetSize - p.currentSize) * 0.05;
+        p.pulsePhase += 0.05;
+
+        // Color (Simple switch for now, could be lerped but RGB string is tricky without parsing)
+        p.colorRGB = targetColor;
+
+        // --- B. MOVIMIENTO ---
         if (visualMode === 'circuit') {
-          // Movimiento "Manhattan": Solo horizontal o vertical
-          if (Math.random() < 0.02) { // Pequeña probabilidad de cambiar de dirección
+          // Movimiento Manhattan (Robótico)
+          // Cambio de dirección aleatorio pero poco frecuente
+          if (Math.random() < 0.01) {
             p.circuitDir = p.circuitDir === 'horizontal' ? 'vertical' : 'horizontal';
           }
-          if (p.circuitDir === 'horizontal') p.x += p.vx * speedMultiplier * 2;
-          else p.y += p.vy * speedMultiplier * 2;
 
+          if (p.circuitDir === 'horizontal') {
+            p.x += (p.vx > 0 ? 1 : -1) * speedMult; // Velocidad constante
+            // Corrección de Y para mantener líneas rectas perfectas
+            // (Opcional: Snap to grid, pero por ahora solo no mover Y)
+          } else {
+            p.y += (p.vy > 0 ? 1 : -1) * speedMult;
+          }
         } else {
-          // Movimiento orgánico normal
-          p.x += p.vx * speedMultiplier;
-          p.y += p.vy * speedMultiplier;
+          // Movimiento Orgánico (Network/Floating)
+          p.x += p.vx * speedMult;
+          p.y += p.vy * speedMult;
         }
 
-        // REBOTE EN BORDES
+        // Rebote
         if (p.x < 0 || p.x > w) p.vx *= -1;
         if (p.y < 0 || p.y > h) p.vy *= -1;
 
-        // INTERACCIÓN CON MOUSE (Sutil repulsión)
+        // Mouse (Sutil)
         const dx = mouse.current.x - p.x;
         const dy = mouse.current.y - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 100) {
-          p.x -= dx * 0.02;
-          p.y -= dy * 0.02;
+        if (dist < 150) {
+          p.x -= dx * 0.01;
+          p.y -= dy * 0.01;
         }
 
-        // DIBUJAR PUNTO
+        // --- C. DIBUJADO DE NODOS ---
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-
-        // Color base morado
-        let color = `rgba(${THEME_COLOR_RGB}, ${baseOpacity})`;
-
-        // Efecto "Chispazo" en modo circuito
-        if (visualMode === 'circuit' && p.pulseTimer % 150 < 10) {
-          color = `rgba(${PULSE_COLOR_RGB}, 0.8)`; // Destello azul
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = `rgb(${PULSE_COLOR_RGB})`;
-        } else {
-          ctx.shadowBlur = 0;
-        }
-
-        ctx.fillStyle = color;
+        ctx.arc(p.x, p.y, p.currentSize, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.colorRGB}, ${visualMode === 'network' ? 0.6 : 0.8})`;
         ctx.fill();
 
-        // DIBUJAR LÍNEAS (CONEXIONES)
-        if (visualMode !== 'floating') {
+        // --- D. CONEXIONES ---
+        if (connectionDist > 0) {
           for (let j = i + 1; j < particles.current.length; j++) {
             const p2 = particles.current[j];
             const dx = p.x - p2.x;
             const dy = p.y - p2.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < connectionDistance) {
-              ctx.beginPath();
-              ctx.moveTo(p.x, p.y);
+            // Optimización: Check rápido de caja
+            if (Math.abs(dx) > connectionDist || Math.abs(dy) > connectionDist) continue;
+
+            const distSq = dx * dx + dy * dy;
+            if (distSq < connectionDist * connectionDist) {
+              const dist = Math.sqrt(distSq);
+              const alpha = 1 - dist / connectionDist;
 
               if (visualMode === 'circuit') {
-                // Estilo Circuito: Líneas rectas (Manhattan)
-                // Solo dibujamos si están casi alineados horizontal o verticalmente
-                if (Math.abs(dx) < 5 || Math.abs(dy) < 5) {
+                // Solo conectar si están alineados en X o Y (con margen de error)
+                const alignmentThreshold = 2.0; // 2px de tolerancia
+                if (Math.abs(dx) < alignmentThreshold || Math.abs(dy) < alignmentThreshold) {
+                  ctx.beginPath();
+                  ctx.moveTo(p.x, p.y);
                   ctx.lineTo(p2.x, p2.y);
-                  const opacity = (1 - dist / connectionDistance) * lineOpacityFactor * 2;
-                  ctx.strokeStyle = `rgba(${THEME_COLOR_RGB}, ${opacity})`;
+                  ctx.strokeStyle = `rgba(${p.colorRGB}, ${alpha * 0.5})`;
                   ctx.lineWidth = 1;
                   ctx.stroke();
                 }
               } else {
-                // Estilo Red Neuronal: Líneas directas
+                // Red Neuronal: Conexión directa
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
                 ctx.lineTo(p2.x, p2.y);
-                const opacity = (1 - dist / connectionDistance) * lineOpacityFactor;
-                ctx.strokeStyle = `rgba(${THEME_COLOR_RGB}, ${opacity})`;
+                ctx.strokeStyle = `rgba(${p.colorRGB}, ${alpha * 0.3})`;
                 ctx.lineWidth = 0.5;
                 ctx.stroke();
               }
@@ -200,7 +216,7 @@ const DynamicNodesGrid: React.FC = () => {
 
     animate();
 
-    // LISTENERS
+    // Listeners
     const handleResize = () => initParticles();
     const handleMouseMove = (e: MouseEvent) => {
       mouse.current.x = e.clientX;
@@ -220,7 +236,6 @@ const DynamicNodesGrid: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      // z-0 para estar detrás, pointer-events-none para no bloquear clicks
       className="fixed top-0 left-0 w-full h-full pointer-events-none z-0"
     />
   );
