@@ -61,7 +61,7 @@ export default function DynamicNodesGrid() {
         if (entry.isIntersecting) {
           const id = entry.target.id;
           if (id === 'hero') setActiveSection('hero');
-          else if (id === 'about') setActiveSection('about'); // Same as hero
+          else if (id === 'about') setActiveSection('about');
           else if (id === 'certifications') setActiveSection('certifications');
           else if (id === 'experience') setActiveSection('experience');
           else if (id === 'projects') setActiveSection('projects');
@@ -87,7 +87,10 @@ export default function DynamicNodesGrid() {
     if (!ctx) return;
 
     let nodes: Node[] = [];
-    const colors = ['#3B82F6', '#6366F1', '#8B5CF6', '#10B981', '#06B6D4'];
+
+    // Palettes
+    const darkPalette = ['#1e3a8a', '#4c1d95', '#0f172a', '#312e81']; // For light sections
+    const lightPalette = ['#60a5fa', '#a78bfa', '#34d399', '#f472b6']; // For dark sections
 
     const initNodes = () => {
       const density = (window.innerWidth * window.innerHeight) / 2500;
@@ -95,6 +98,7 @@ export default function DynamicNodesGrid() {
 
       nodes = [];
       for (let i = 0; i < NODE_COUNT; i++) {
+        const color = darkPalette[Math.floor(Math.random() * darkPalette.length)];
         nodes.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
@@ -102,12 +106,12 @@ export default function DynamicNodesGrid() {
           vy: 0,
           targetX: Math.random() * canvas.width,
           targetY: Math.random() * canvas.height,
-          size: 1 + Math.random(), // 1-2px Neon Stardust
-          color: colors[Math.floor(Math.random() * colors.length)],
-          baseColor: colors[Math.floor(Math.random() * colors.length)],
-          opacity: 0.4 + Math.random() * 0.6,
+          size: 1.5 + Math.random() * 1.5, // Slightly larger (1.5-3px)
+          color: color,
+          baseColor: color,
+          opacity: 0.6 + Math.random() * 0.4,
           type: 'data',
-          isAmbient: false // Will be set dynamically
+          isAmbient: false
         });
       }
     };
@@ -149,26 +153,20 @@ export default function DynamicNodesGrid() {
       const minDim = Math.min(width, height);
 
       if (section === 'hero' || section === 'about') {
-        // Organic Swarm - No fixed targets, handled in animation loop
         return null;
       } else if (section === 'certifications') {
-        // Marea (Tide) - Edges
         for (let i = 0; i < count; i++) {
-          // Simple wave at bottom
           const x = (i / count) * width;
           const y = height - 50 + Math.sin(i * 0.1) * 20;
           points.push({ x, y });
         }
-        // We only want a subset for the wave, rest ambient
         return points.slice(0, Math.floor(count * 0.4));
 
       } else if (section === 'experience') {
         const isMobile = width < 768;
         const cellSize = isMobile ? Math.min(width / 25, 15) : 18;
 
-        // SQL (Left/Center)
         const sqlPoints = getGridPoints(sqlGrid, 0, 0, cellSize);
-        // Center the grid
         const gridW = sqlGrid[0].length * cellSize;
         const gridH = sqlGrid.length * cellSize;
 
@@ -182,21 +180,7 @@ export default function DynamicNodesGrid() {
 
         points = [...finalSqlPoints];
 
-        // </> (Right - Desktop Only)
         if (!isMobile) {
-          // Hardcoded </> shape roughly
-          const codePoints = [];
-          const codeStartX = width * 0.75;
-          const codeStartY = centerY;
-          // <
-          for (let i = 0; i < 10; i++) codePoints.push({ x: codeStartX - 20 + i * 5, y: codeStartY - i * 5 });
-          for (let i = 0; i < 10; i++) codePoints.push({ x: codeStartX - 20 + i * 5, y: codeStartY + i * 5 });
-          // /
-          for (let i = 0; i < 15; i++) codePoints.push({ x: codeStartX + 10 + i * 2, y: codeStartY + 20 - i * 3 });
-          // >
-          for (let i = 0; i < 10; i++) codePoints.push({ x: codeStartX + 50 + i * 5, y: codeStartY - 50 + i * 5 }); // Fix logic later if needed, simplified
-          // Better manual construction for </>
-          // Just add some random points in that area for now to simulate it
           for (let i = 0; i < 50; i++) {
             points.push({ x: width * 0.75 + (Math.random() - 0.5) * 100, y: centerY + (Math.random() - 0.5) * 100 });
           }
@@ -204,18 +188,16 @@ export default function DynamicNodesGrid() {
         return points;
 
       } else if (section === 'projects') {
-        // Pie Chart
         const radius = minDim * 0.25;
-        const totalPoints = Math.floor(count * 0.6); // Use 60% of nodes
+        const totalPoints = Math.floor(count * 0.6);
 
         for (let i = 0; i < totalPoints; i++) {
           const angle = (i / totalPoints) * Math.PI * 2;
-          const r = Math.sqrt(Math.random()) * radius; // Uniform distribution in circle
+          const r = Math.sqrt(Math.random()) * radius;
 
           let x = centerX + Math.cos(angle) * r;
           let y = centerY + Math.sin(angle) * r;
 
-          // Offset slice (0 to 60 degrees)
           const deg = (angle * 180) / Math.PI;
           if (deg > 0 && deg < 60) {
             x += 20;
@@ -226,7 +208,6 @@ export default function DynamicNodesGrid() {
         return points;
 
       } else if (section === 'contact') {
-        // Envelope
         const cellSize = Math.min(width / 25, 20);
         const mailPoints = getGridPoints(mailGrid, 0, 0, cellSize);
         const gridW = mailGrid[0].length * cellSize;
@@ -256,15 +237,26 @@ export default function DynamicNodesGrid() {
       const currentSection = sectionRef.current;
       const targetPoints = getShapePoints(currentSection, canvas.width, canvas.height, nodes.length);
 
-      // Assign targets
-      let assignedCount = 0;
-      if (targetPoints) {
-        assignedCount = targetPoints.length;
-      }
+      // Dynamic Color Logic
+      // Light sections: Hero, About, Certifications -> Dark Particles
+      // Dark sections: Experience, Projects, Contact -> Light Particles
+      const isLightSection = ['hero', 'about', 'certifications'].includes(currentSection);
+      const targetPalette = isLightSection ? darkPalette : lightPalette;
 
       nodes.forEach((node, i) => {
-        // Determine if node is part of shape or ambient
-        // If targetPoints exists and i < targetPoints.length, it's a shape node
+        // Color Transition (Lerp)
+        // Simplified: Just pick from target palette occasionally or drift towards it
+        // For performance, we'll just switch baseColor and let it be drawn
+        // To make it smooth, we could interpolate RGB, but switching palette index is cheaper
+        // Let's just re-assign color if it doesn't match the current palette theme roughly
+
+        // Check if current color is in target palette (simple check by hex length or just re-assign)
+        // Better: Store targetColor and lerp. For now, instant switch with fade might be better?
+        // Let's do a gradual shift:
+        if (Math.random() < 0.05) { // 5% chance per frame to switch color to target palette
+          node.color = targetPalette[Math.floor(Math.random() * targetPalette.length)];
+        }
+
         const isShape = targetPoints && i < targetPoints.length;
         node.isAmbient = !isShape;
 
@@ -272,38 +264,28 @@ export default function DynamicNodesGrid() {
           node.targetX = targetPoints[i].x;
           node.targetY = targetPoints[i].y;
         } else {
-          // Ambient / Swarm Behavior
           if (currentSection === 'hero' || currentSection === 'about') {
-            // Organic Swarm
             const angle = time * 0.2 + (i * 0.1);
             const radius = 200 + Math.sin(time * 0.5 + i) * 50;
             node.targetX = canvas.width / 2 + Math.cos(angle) * radius * Math.sin(time * 0.1);
             node.targetY = canvas.height / 2 + Math.sin(angle) * radius;
           } else {
-            // Floating Noise for other sections (Anti-Clumping)
-            // Keep them away from center if possible, or just random float
             if (!node.isAmbient) {
-              // Should not happen if logic is correct, but safety
               node.targetX = node.x; node.targetY = node.y;
             } else {
-              // Float around
               node.targetX = node.x + Math.sin(time + i) * 20;
               node.targetY = node.y + Math.cos(time + i) * 20;
             }
           }
         }
 
-        // Physics (Lerp for transitions)
         const dx = node.targetX - node.x;
         const dy = node.targetY - node.y;
-
-        // Aggressive Lerp for shape formation
-        const lerpFactor = isShape ? 0.1 : 0.02; // Snap to shape, float otherwise
+        const lerpFactor = isShape ? 0.1 : 0.02;
 
         node.x += dx * lerpFactor;
         node.y += dy * lerpFactor;
 
-        // Mouse Repulsion (Subtle)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
@@ -314,7 +296,6 @@ export default function DynamicNodesGrid() {
           node.y += (dyMouse / distMouse) * force * 5;
         }
 
-        // Draw
         ctx.globalAlpha = node.opacity;
         ctx.fillStyle = node.color;
         ctx.beginPath();
@@ -340,7 +321,7 @@ export default function DynamicNodesGrid() {
       className="fixed inset-0 pointer-events-none z-10"
       style={{
         background: 'transparent',
-        mixBlendMode: 'screen' // Neon effect
+        // mixBlendMode removed for better visibility on light backgrounds
       }}
     />
   );
