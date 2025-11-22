@@ -15,8 +15,7 @@ interface Node {
 
 export default function DynamicNodesGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-
+  const mouseRef = useRef({ x: -1000, y: -1000 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -32,6 +31,12 @@ export default function DynamicNodesGrid() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
+    // Mouse tracking
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
     // Detectar zonas de exclusión (halos invisibles) - MEJORADO
     const getExclusionZones = () => {
       const zones = [];
@@ -43,20 +48,22 @@ export default function DynamicNodesGrid() {
       if (heroImg) {
         const rect = heroImg.getBoundingClientRect();
         zones.push({
-          x: rect.left - 80,
-          y: rect.top - 80,
-          width: rect.width + 160,
-          height: rect.height + 160
+          x: rect.left - 100, // Halo más grande
+          y: rect.top - 100,
+          width: rect.width + 200,
+          height: rect.height + 200,
+          isHero: true // Marcador especial para hero
         });
       }
 
       if (heroTitle) {
         const rect = heroTitle.getBoundingClientRect();
         zones.push({
-          x: rect.left - 60,
-          y: rect.top - 30,
-          width: rect.width + 120,
-          height: rect.height + 60
+          x: rect.left - 80,
+          y: rect.top - 40,
+          width: rect.width + 160,
+          height: rect.height + 80,
+          isHero: true
         });
       }
 
@@ -69,7 +76,8 @@ export default function DynamicNodesGrid() {
             x: rect.left - 40,
             y: rect.top - 15,
             width: rect.width + 80,
-            height: rect.height + 30
+            height: rect.height + 30,
+            isHero: false
           });
         }
       });
@@ -83,7 +91,8 @@ export default function DynamicNodesGrid() {
             x: rect.left - 20,
             y: rect.top - 10,
             width: rect.width + 40,
-            height: rect.height + 20
+            height: rect.height + 20,
+            isHero: false
           });
         }
       });
@@ -109,8 +118,8 @@ export default function DynamicNodesGrid() {
           nodeCount: 14,
           colors: ['#0A66C2', '#3B82F6', '#60A5FA'],
           baseSize: 6,
-          speed: 0.15, // Lento pero constante
-          connectionDistance: 180, // Conexiones más largas
+          speed: 0.15,
+          connectionDistance: 180,
           opacity: 0.7,
           respectZones: true,
           behavior: 'cybernetic'
@@ -144,8 +153,8 @@ export default function DynamicNodesGrid() {
           nodeCount,
           colors: ['#9CA3AF', '#D1D5DB', '#E5E7EB'],
           baseSize: Math.max(4 - expDensity * 0.2, 3),
-          speed: 0.04, // Muy lentos
-          connectionDistance: 120, // Conexiones visibles
+          speed: 0.04,
+          connectionDistance: 120,
           opacity: 0.4,
           respectZones: true,
           behavior: 'respectful'
@@ -174,14 +183,14 @@ export default function DynamicNodesGrid() {
       // Contacto (80-100%): Asentados y expectantes
       else {
         return {
-          nodeCount: 8, // Pocos nodos asentados
+          nodeCount: 8,
           colors: ['#FFFFFF', '#FEF3C7', '#FDE68A', '#F3E8FF'],
-          baseSize: 5, // Sin pulsaciones
-          speed: 0.03, // Muy lentos, asentados
-          connectionDistance: 140, // Conexiones más visibles
+          baseSize: 5,
+          speed: 0.03,
+          connectionDistance: 140,
           opacity: 0.8,
           respectZones: false,
-          behavior: 'settled' // Asentados
+          behavior: 'settled'
         };
       }
     };
@@ -268,7 +277,7 @@ export default function DynamicNodesGrid() {
       const currentConfig = getConfigForPosition(scrollProgress);
 
       // Actualizar nodos gradualmente
-      if (Math.random() < 0.1) { // Solo actualizar ocasionalmente
+      if (Math.random() < 0.1) {
         createNodes(currentConfig);
       }
 
@@ -278,44 +287,48 @@ export default function DynamicNodesGrid() {
       nodes.forEach((node, index) => {
         // Comportamientos cibernéticos suaves
         if (node.behavior === 'cybernetic') {
-          // Hero: Movimiento constante tipo simulación IA
           node.pulse += 0.01;
-          // Movimiento lineal con pequeñas variaciones
           const variation = Math.sin(node.pulse) * 0.1;
           node.vx += variation * 0.005;
           node.vy += variation * 0.005;
         } else if (node.behavior === 'transitioning') {
-          // Transición suave
           node.pulse += 0.008;
           const transition = Math.sin(node.pulse) * 0.05;
           node.vx += transition * 0.003;
           node.vy += transition * 0.003;
         } else if (node.behavior === 'respectful') {
           // RESPETO ESTRICTO de zonas de exclusión
-          const futureX = node.x + node.vx * 10; // Predecir posición
+          const futureX = node.x + node.vx * 10;
           const futureY = node.y + node.vy * 10;
 
           if (isInExclusionZone(futureX, futureY, exclusionZones)) {
-            // Cambiar dirección suavemente
             node.vx *= -0.8;
             node.vy *= -0.8;
-            // Añadir desviación
             node.vx += (Math.random() - 0.5) * 0.02;
             node.vy += (Math.random() - 0.5) * 0.02;
           }
           node.pulse += 0.005;
         } else if (node.behavior === 'awakening') {
-          // Despertar muy gradual
           node.pulse += 0.01;
           const awakening = Math.sin(node.pulse) * 0.08;
           node.vx += awakening * 0.004;
           node.vy += awakening * 0.004;
         } else if (node.behavior === 'settled') {
-          // Asentados: movimiento mínimo
           node.pulse += 0.003;
           const settled = Math.sin(node.pulse) * 0.02;
           node.vx += settled * 0.001;
           node.vy += settled * 0.001;
+        }
+
+        // INTERACCIÓN CON MOUSE - Repulsión
+        const dxMouse = node.x - mouseRef.current.x;
+        const dyMouse = node.y - mouseRef.current.y;
+        const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+
+        if (distMouse < 120) { // Radio de repulsión
+          const force = (120 - distMouse) / 120;
+          node.vx += (dxMouse / distMouse) * force * 4; // Fuerza de repulsión
+          node.vy += (dyMouse / distMouse) * force * 4;
         }
 
         // Movimiento básico
@@ -327,8 +340,26 @@ export default function DynamicNodesGrid() {
         if (node.x <= 0 || node.x >= canvas.width) node.vx *= -1;
         if (node.y <= 0 || node.y >= canvas.height) node.vy *= -1;
 
+        // REPULSIÓN EXTRA FUERTE EN ZONAS HERO
+        exclusionZones.forEach((zone: any) => {
+          if (zone.isHero) {
+            const zoneCenterX = zone.x + zone.width / 2;
+            const zoneCenterY = zone.y + zone.height / 2;
+            const dxZone = node.x - zoneCenterX;
+            const dyZone = node.y - zoneCenterY;
+            const distZone = Math.sqrt(dxZone * dxZone + dyZone * dyZone);
+            const repelRadius = Math.max(zone.width, zone.height) / 2;
+
+            if (distZone < repelRadius) {
+              const repelForce = (repelRadius - distZone) / repelRadius;
+              node.vx += (dxZone / distZone) * repelForce * 8; // Fuerza muy fuerte
+              node.vy += (dyZone / distZone) * repelForce * 8;
+            }
+          }
+        });
+
         // Sin pulsaciones - estilo cibernético limpio
-        const breathe = 1; // Sin efectos de respiración
+        const breathe = 1;
 
         // Dibujar nodo neuronal
         ctx.globalAlpha = node.opacity;
@@ -342,18 +373,16 @@ export default function DynamicNodesGrid() {
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance < currentConfig.connectionDistance) {
-            // Conexiones más visibles y harmónicas
             const opacity = (currentConfig.connectionDistance - distance) / currentConfig.connectionDistance;
-            let connectionOpacity = opacity * currentConfig.opacity * 0.6; // Más visibles
+            let connectionOpacity = opacity * currentConfig.opacity * 0.6;
 
-            // Verificar que la conexión no pase por zonas de exclusión
             const midX = (node.x + otherNode.x) / 2;
             const midY = (node.y + otherNode.y) / 2;
 
             if (!isInExclusionZone(midX, midY, exclusionZones)) {
               ctx.globalAlpha = connectionOpacity;
               ctx.strokeStyle = node.color;
-              ctx.lineWidth = 1.2; // Líneas más gruesas
+              ctx.lineWidth = 1.2;
               ctx.beginPath();
               ctx.moveTo(node.x, node.y);
               ctx.lineTo(otherNode.x, otherNode.y);
@@ -377,6 +406,7 @@ export default function DynamicNodesGrid() {
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 
