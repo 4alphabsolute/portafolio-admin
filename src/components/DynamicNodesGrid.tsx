@@ -31,17 +31,14 @@ export default function DynamicNodesGrid() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Mouse tracking
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Detectar zonas de exclusión (halos invisibles) - MEJORADO
     const getExclusionZones = () => {
       const zones = [];
 
-      // Hero: Foto y nombre con halos más grandes
       const heroImg = document.querySelector('img[alt*="Andrés"], img[alt*="profile"], .hero img, img');
       const heroTitle = document.querySelector('h1, .hero h1, [class*="hero"] h1');
 
@@ -67,7 +64,6 @@ export default function DynamicNodesGrid() {
         });
       }
 
-      // Bloques de texto importantes con halos
       const textBlocks = document.querySelectorAll('h2, h3, .text-xl, .text-2xl, .text-3xl, .text-4xl');
       textBlocks.forEach(block => {
         const rect = block.getBoundingClientRect();
@@ -82,7 +78,6 @@ export default function DynamicNodesGrid() {
         }
       });
 
-      // Contenido de párrafos largos
       const paragraphs = document.querySelectorAll('p');
       paragraphs.forEach(p => {
         const rect = p.getBoundingClientRect();
@@ -100,7 +95,6 @@ export default function DynamicNodesGrid() {
       return zones;
     };
 
-    // Detectar densidad de contenido por sección
     const detectContentDensity = () => {
       const projects = document.querySelectorAll('.project-card, [class*="project"]').length;
       const certifications = document.querySelectorAll('.cert-card, [class*="cert"]').length;
@@ -109,7 +103,6 @@ export default function DynamicNodesGrid() {
       return { projects, certifications, experience };
     };
 
-    // Configuración inteligente basada en contenido
     const getConfigForPosition = (scrollProgress: number) => {
       const density = detectContentDensity();
       if (scrollProgress < 0.2) {
@@ -301,16 +294,16 @@ export default function DynamicNodesGrid() {
           node.vy += settled * 0.001;
         }
 
-        // INTERACCIÓN CON MOUSE - Repulsión SUTIL (como mano en agua)
+        // PERTURBACIÓN MUY SUTIL DEL MOUSE (casi imperceptible)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
 
-        if (distMouse < 150) {
-          const force = (150 - distMouse) / 150;
-          // Fuerza MUY suave - efecto coqueto y armónico
-          node.vx += (dxMouse / distMouse) * force * 0.8;
-          node.vy += (dyMouse / distMouse) * force * 0.8;
+        if (distMouse < 180) { // Radio más amplio pero fuerza mínima
+          const force = (180 - distMouse) / 180;
+          // Perturbación MÍNIMA - solo para sentir interactividad sin distracción
+          node.vx += (dxMouse / distMouse) * force * 0.3;
+          node.vy += (dyMouse / distMouse) * force * 0.3;
         }
 
         node.x += node.vx;
@@ -332,7 +325,6 @@ export default function DynamicNodesGrid() {
 
             if (distZone < repelRadius) {
               const repelForce = (repelRadius - distZone) / repelRadius;
-              // Fuerza firme pero armónica - reducida de x8 a x2
               node.vx += (dxZone / distZone) * repelForce * 2;
               node.vy += (dyZone / distZone) * repelForce * 2;
             }
