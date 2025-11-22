@@ -8,246 +8,255 @@ interface Node {
   targetX: number;
   targetY: number;
   size: number;
+  shape: 'circle' | 'rect';
   color: string;
-  baseColor: string;
   opacity: number;
-  type: 'data' | 'finance' | 'tech' | 'innovation';
-  isAmbient: boolean;
 }
 
-type SectionState = 'hero' | 'about' | 'certifications' | 'experience' | 'projects' | 'contact';
+type SectionState = 'hero' | 'certifications' | 'experience' | 'projects' | 'contact';
 
 export default function DynamicNodesGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const [activeSection, setActiveSection] = useState<SectionState>('hero');
   const sectionRef = useRef<SectionState>('hero');
-  const isExplodingRef = useRef(false);
 
+  // Intersection Observer para detectar sección activa
   useEffect(() => {
-    if (sectionRef.current !== activeSection) {
-      isExplodingRef.current = true;
-      setTimeout(() => {
-        isExplodingRef.current = false;
-      }, 200);
-    }
-    sectionRef.current = activeSection;
-  }, [activeSection]);
-
-  useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: "-10% 0px -10% 0px"
-    };
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const id = entry.target.id;
-          if (id === 'hero') setActiveSection('hero');
-          else if (id === 'about') setActiveSection('about');
-          else if (id === 'certifications') setActiveSection('certifications');
-          else if (id === 'experience') setActiveSection('experience');
-          else if (id === 'projects') setActiveSection('projects');
-          else if (id === 'contact') setActiveSection('contact');
+          const id = entry.target.id as SectionState;
+          if (['hero', 'about', 'certifications', 'experience', 'projects', 'contact'].includes(id)) {
+            setActiveSection(id === 'about' ? 'hero' : id);
+          }
         }
       });
-    }, observerOptions);
+    }, { threshold: 0.3 });
 
-    const sections = ['hero', 'about', 'certifications', 'experience', 'projects', 'contact'];
-    sections.forEach(id => {
-      const element = document.getElementById(id);
-      if (element) observer.observe(element);
+    ['hero', 'about', 'certifications', 'experience', 'projects', 'contact'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
     });
 
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
+    sectionRef.current = activeSection;
+  }, [activeSection]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let nodes: Node[] = [];
-
-    // Paleta de colores que cambia según la sección
-    const heroColors = ['#3B82F6', '#6366F1', '#8B5CF6', '#60A5FA', '#94A3B8']; // Azul/Gris
-    const bottomColors = ['#8B5CF6', '#A78BFA', '#C084FC', '#FBBF24', '#F59E0B']; // Morado/Amarillo
-    const whiteAccent = '#F8FAFC'; // Blanco aislado
+    const NODE_COUNT = 80;
 
     const initNodes = () => {
-      const density = (window.innerWidth * window.innerHeight) / 2000;
-      const NODE_COUNT = Math.floor(density);
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
 
       nodes = [];
       for (let i = 0; i < NODE_COUNT; i++) {
-        const isAmbient = Math.random() < 0.3;
-        const isWhiteAccent = Math.random() < 0.1; // 10% blancos
-
         nodes.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
           vx: 0,
           vy: 0,
-          targetX: Math.random() * canvas.width,
-          targetY: Math.random() * canvas.height,
-          size: 1 + Math.random() * 0.5,
-          color: isWhiteAccent ? whiteAccent : heroColors[Math.floor(Math.random() * heroColors.length)],
-          baseColor: isWhiteAccent ? whiteAccent : heroColors[Math.floor(Math.random() * heroColors.length)],
-          opacity: 0.6,
-          type: 'data',
-          isAmbient
+          targetX: canvas.width / 2,
+          targetY: canvas.height / 2,
+          size: Math.random() > 0.7 ? 3 : 2,
+          shape: Math.random() > 0.8 ? 'rect' : 'circle',
+          color: '#3B82F6',
+          opacity: 0.6
         });
       }
     };
 
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initNodes();
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    initNodes();
+    window.addEventListener('resize', initNodes);
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener('mousemove', handleMouseMove);
 
+    // Funciones para generar puntos objetivo según la sección
+    const getTargetPoints = (section: SectionState, w: number, h: number): { x: number, y: number }[] => {
+      const centerX = w / 2;
+      const centerY = h / 2;
+      const targets: { x: number, y: number }[] = [];
+
+      if (section === 'hero') {
+        // THE HALO - Órbita circular
+        for (let i = 0; i < NODE_COUNT; i++) {
+          const angle = (i / NODE_COUNT) * Math.PI * 2;
+          const radius = Math.min(w, h) * 0.35;
+          targets.push({
+            x: centerX + Math.cos(angle) * radius,
+            y: centerY + Math.sin(angle) * radius
+          });
+        }
+      } else if (section === 'certifications') {
+        // THE FRAME - Marco en los bordes
+        const margin = 50;
+        const perSide = Math.floor(NODE_COUNT / 4);
+
+        for (let i = 0; i < perSide; i++) {
+          targets.push({ x: (i / perSide) * w, y: margin }); // Top
+          targets.push({ x: (i / perSide) * w, y: h - margin }); // Bottom
+          targets.push({ x: margin, y: (i / perSide) * h }); // Left
+          targets.push({ x: w - margin, y: (i / perSide) * h }); // Right
+        }
+      } else if (section === 'experience') {
+        // THE SHAPES - Símbolos R, BI, </>
+        const scale = 15;
+        const leftX = w * 0.2;
+        const rightX = w * 0.8;
+        const midY = h * 0.5;
+
+        // Símbolo "R" a la izquierda (simplificado)
+        const rPoints = [
+          [0, 0], [0, 1], [0, 2], [0, 3], [0, 4],
+          [1, 0], [2, 0], [2, 1], [1, 2], [2, 3], [2, 4]
+        ];
+        rPoints.forEach(([dx, dy]) => {
+          targets.push({ x: leftX + dx * scale, y: midY - 30 + dy * scale });
+        });
+
+        // Símbolo "</>" a la derecha
+        const codePoints = [
+          [-2, 0], [-1, -1], [0, -2], [1, -1], [2, 0], // <
+          [4, -2], [4, 2], // /
+          [6, 0], [7, -1], [8, -2], [7, 1], [6, 0] // >
+        ];
+        codePoints.forEach(([dx, dy]) => {
+          targets.push({ x: rightX + dx * scale, y: midY + dy * scale });
+        });
+
+      } else if (section === 'projects') {
+        // THE TECH CONSTELLATION - Red densa
+        for (let i = 0; i < NODE_COUNT; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * Math.min(w, h) * 0.4;
+          targets.push({
+            x: centerX + Math.cos(angle) * radius,
+            y: centerY + Math.sin(angle) * radius
+          });
+        }
+      } else if (section === 'contact') {
+        // HARMONIC WAITING - Símbolo @
+        const radius = Math.min(w, h) * 0.15;
+        for (let i = 0; i < NODE_COUNT; i++) {
+          const angle = (i / NODE_COUNT) * Math.PI * 2;
+          const r = i < NODE_COUNT * 0.6 ? radius : radius * 1.5;
+          targets.push({
+            x: centerX + Math.cos(angle) * r,
+            y: centerY + Math.sin(angle) * r
+          });
+        }
+      }
+
+      // Rellenar si faltan puntos
+      while (targets.length < NODE_COUNT) {
+        targets.push({ x: centerX, y: centerY });
+      }
+
+      return targets.slice(0, NODE_COUNT);
+    };
+
     let time = 0;
-    let animationFrameId: number;
+    let animationId: number;
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       time += 0.01;
 
       const currentSection = sectionRef.current;
-      const isExploding = isExplodingRef.current;
+      const targetPoints = getTargetPoints(currentSection, canvas.width, canvas.height);
 
-      const shapeNodes = nodes.filter(n => !n.isAmbient);
-      const ambientNodes = nodes.filter(n => n.isAmbient);
-
-      // Transición de colores según sección
-      let targetPalette = heroColors;
-      if (currentSection === 'projects' || currentSection === 'contact') {
-        targetPalette = bottomColors;
-      }
-
-      // Actualizar nodos de forma
-      shapeNodes.forEach((node, i) => {
-        // Transición suave de color
-        if (Math.random() < 0.05 && node.baseColor !== whiteAccent) {
-          node.color = targetPalette[Math.floor(Math.random() * targetPalette.length)];
+      nodes.forEach((node, i) => {
+        // Asignar objetivo
+        if (targetPoints[i]) {
+          node.targetX = targetPoints[i].x;
+          node.targetY = targetPoints[i].y;
         }
 
-        // Movimiento orbital en hero
-        if (currentSection === 'hero' || currentSection === 'about') {
-          const angle = time * 0.2 + (i * 0.1);
-          const radius = 200 + Math.sin(time * 0.5 + i) * 50;
-          node.targetX = canvas.width / 2 + Math.cos(angle) * radius * Math.sin(time * 0.1);
-          node.targetY = canvas.height / 2 + Math.sin(angle) * radius;
-        } else {
-          // Movimiento más libre en otras secciones
-          node.targetX = canvas.width / 2 + Math.cos(time * 0.3 + i) * 300;
-          node.targetY = canvas.height / 2 + Math.sin(time * 0.3 + i) * 300;
-        }
-
-        if (isExploding) {
-          node.targetX += (Math.random() - 0.5) * 800;
-          node.targetY += (Math.random() - 0.5) * 800;
-        }
-
+        // Física fluida con lerp suave
         const dx = node.targetX - node.x;
         const dy = node.targetY - node.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        const speed = dist < 100 ? (dist / 100) * 8 : 8;
-        const steerX = (dx / dist) * speed - node.vx;
-        const steerY = (dy / dist) * speed - node.vy;
+        if (dist > 1) {
+          const speed = Math.min(dist * 0.02, 5);
+          const steerX = (dx / dist) * speed - node.vx;
+          const steerY = (dy / dist) * speed - node.vy;
 
-        node.vx += steerX * 0.1;
-        node.vy += steerY * 0.1;
+          node.vx += steerX * 0.05;
+          node.vy += steerY * 0.05;
+        }
 
+        // Efecto halo del mouse (perturbación magnética suave)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
 
         if (distMouse < 150) {
           const force = (150 - distMouse) / 150;
-          node.vx += (dxMouse / distMouse) * force * 3;
-          node.vy += (dyMouse / distMouse) * force * 3;
+          node.vx += (dxMouse / distMouse) * force * 2;
+          node.vy += (dyMouse / distMouse) * force * 2;
         }
 
+        // Aplicar velocidad con fricción (efecto agua)
         node.x += node.vx;
         node.y += node.vy;
-        node.vx *= 0.90;
-        node.vy *= 0.90;
+        node.vx *= 0.92;
+        node.vy *= 0.92;
 
+        // Dibujar nodo
         ctx.globalAlpha = node.opacity;
         ctx.fillStyle = node.color;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-        ctx.fill();
 
-        // Conexiones de red neuronal
-        shapeNodes.slice(i + 1, i + 3).forEach(other => {
-          const dX = node.x - other.x;
-          const dY = node.y - other.y;
-          if (Math.abs(dX) < 50 && Math.abs(dY) < 50) {
-            ctx.beginPath();
-            ctx.moveTo(node.x, node.y);
-            ctx.lineTo(other.x, other.y);
-            ctx.strokeStyle = node.color;
-            ctx.lineWidth = 0.2;
-            ctx.globalAlpha = 0.1;
-            ctx.stroke();
-          }
-        });
-      });
-
-      // Nodos ambientes flotando
-      ambientNodes.forEach(node => {
-        if (Math.random() < 0.05 && node.baseColor !== whiteAccent) {
-          node.color = targetPalette[Math.floor(Math.random() * targetPalette.length)];
+        if (node.shape === 'circle') {
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(node.x - node.size, node.y - node.size, node.size * 2, node.size * 2);
         }
 
-        node.targetX = node.x + Math.sin(time + node.x) * 20;
-        node.targetY = node.y + Math.cos(time + node.y) * 20;
+        // Conexiones (solo en projects para constelación tech)
+        if (currentSection === 'projects') {
+          nodes.slice(i + 1, i + 3).forEach(other => {
+            const dx = node.x - other.x;
+            const dy = node.y - other.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
 
-        const dx = node.targetX - node.x;
-        const dy = node.targetY - node.y;
-
-        node.vx += dx * 0.001;
-        node.vy += dy * 0.001;
-
-        node.x += node.vx;
-        node.y += node.vy;
-        node.vx *= 0.95;
-        node.vy *= 0.95;
-
-        if (node.x < 0) node.x = canvas.width;
-        if (node.x > canvas.width) node.x = 0;
-        if (node.y < 0) node.y = canvas.height;
-        if (node.y > canvas.height) node.y = 0;
-
-        ctx.globalAlpha = node.opacity * 0.5;
-        ctx.fillStyle = node.color;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-        ctx.fill();
+            if (dist < 100) {
+              ctx.beginPath();
+              ctx.moveTo(node.x, node.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.strokeStyle = node.color;
+              ctx.lineWidth = 0.5;
+              ctx.globalAlpha = (1 - dist / 100) * 0.3;
+              ctx.stroke();
+            }
+          });
+        }
       });
 
-      animationFrameId = requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
     };
 
     animate();
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('resize', initNodes);
       window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
+      cancelAnimationFrame(animationId);
     };
   }, []);
 
@@ -255,10 +264,7 @@ export default function DynamicNodesGrid() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-10"
-      style={{
-        background: 'transparent',
-        mixBlendMode: 'multiply'
-      }}
+      style={{ background: 'transparent' }}
     />
   );
 }
