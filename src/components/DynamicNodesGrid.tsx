@@ -1,257 +1,264 @@
-import React, { useRef, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-// --- CONFIGURACIÓN CORPORATE TECH ---
-const COLORS = {
-  BLUE: '59, 130, 246',   // Royal Blue (#3B82F6) - Hero
-  CYAN: '34, 211, 238',   // Cyberpunk Cyan (#22D3EE) - Circuit glow
-  VIOLET: '124, 58, 237', // Corporate Violet (#7C3AED) - Network
-};
-
-type VisualMode = 'circuit' | 'network' | 'floating';
-
-interface Particle {
+interface Node {
   x: number;
   y: number;
   vx: number;
   vy: number;
-  targetSize: number;
-  currentSize: number;
-  colorRGB: string;
-  circuitDir: 'horizontal' | 'vertical';
-  pulsePhase: number;
-  isPulseNode: boolean; // Para nodos que pulsan en circuito
+  targetX: number;
+  targetY: number;
+  size: number;
+  color: string;
+  baseColor: string;
+  opacity: number;
+  type: 'data' | 'finance' | 'tech' | 'innovation';
+  isAmbient: boolean;
 }
 
-const DynamicNodesGrid: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [visualMode, setVisualMode] = useState<VisualMode>('circuit');
-  const particles = useRef<Particle[]>([]);
-  const mouse = useRef({ x: -1000, y: -1000 });
-  const animationRef = useRef<number>();
+type SectionState = 'hero' | 'about' | 'certifications' | 'experience' | 'projects' | 'contact';
 
-  // --- 1. DETECTOR DE SECCIONES ---
+export default function DynamicNodesGrid() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: -1000, y: -1000 });
+  const [activeSection, setActiveSection] = useState<SectionState>('hero');
+  const sectionRef = useRef<SectionState>('hero');
+  const isExplodingRef = useRef(false);
+
   useEffect(() => {
+    if (sectionRef.current !== activeSection) {
+      isExplodingRef.current = true;
+      setTimeout(() => {
+        isExplodingRef.current = false;
+      }, 200);
+    }
+    sectionRef.current = activeSection;
+  }, [activeSection]);
+
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "-10% 0px -10% 0px"
+    };
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const id = entry.target.id;
-          if (id === 'hero' || id === 'about') {
-            setVisualMode('circuit');
-          } else if (id === 'experience' || id === 'projects' || id === 'certifications') {
-            setVisualMode('network');
-          } else if (id === 'contact') {
-            setVisualMode('floating');
-          }
+          if (id === 'hero') setActiveSection('hero');
+          else if (id === 'about') setActiveSection('about');
+          else if (id === 'certifications') setActiveSection('certifications');
+          else if (id === 'experience') setActiveSection('experience');
+          else if (id === 'projects') setActiveSection('projects');
+          else if (id === 'contact') setActiveSection('contact');
         }
       });
-    }, { threshold: 0.25 });
+    }, observerOptions);
 
-    ['hero', 'about', 'experience', 'projects', 'certifications', 'contact'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
+    const sections = ['hero', 'about', 'certifications', 'experience', 'projects', 'contact'];
+    sections.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
     });
 
     return () => observer.disconnect();
   }, []);
 
-  // --- 2. INICIALIZACIÓN ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const initParticles = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    let nodes: Node[] = [];
 
-      // DENSIDAD REDUCIDA ~40% (15000 en lugar de 9000)
-      const densityDivisor = window.innerWidth < 768 ? 8000 : 15000;
-      const count = Math.floor((canvas.width * canvas.height) / densityDivisor);
+    // Paleta de colores que cambia según la sección
+    const heroColors = ['#3B82F6', '#6366F1', '#8B5CF6', '#60A5FA', '#94A3B8']; // Azul/Gris
+    const bottomColors = ['#8B5CF6', '#A78BFA', '#C084FC', '#FBBF24', '#F59E0B']; // Morado/Amarillo
+    const whiteAccent = '#F8FAFC'; // Blanco aislado
 
-      const newParticles: Particle[] = [];
-      for (let i = 0; i < count; i++) {
-        newParticles.push({
+    const initNodes = () => {
+      const density = (window.innerWidth * window.innerHeight) / 2000;
+      const NODE_COUNT = Math.floor(density);
+
+      nodes = [];
+      for (let i = 0; i < NODE_COUNT; i++) {
+        const isAmbient = Math.random() < 0.3;
+        const isWhiteAccent = Math.random() < 0.1; // 10% blancos
+
+        nodes.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          targetSize: 2,
-          currentSize: 2,
-          colorRGB: COLORS.BLUE,
-          circuitDir: Math.random() > 0.5 ? 'horizontal' : 'vertical',
-          pulsePhase: Math.random() * Math.PI * 2,
-          isPulseNode: Math.random() < 0.15 // 15% son nodos que pulsan
+          vx: 0,
+          vy: 0,
+          targetX: Math.random() * canvas.width,
+          targetY: Math.random() * canvas.height,
+          size: 1 + Math.random() * 0.5,
+          color: isWhiteAccent ? whiteAccent : heroColors[Math.floor(Math.random() * heroColors.length)],
+          baseColor: isWhiteAccent ? whiteAccent : heroColors[Math.floor(Math.random() * heroColors.length)],
+          opacity: 0.6,
+          type: 'data',
+          isAmbient
         });
       }
-      particles.current = newParticles;
     };
 
-    initParticles();
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initNodes();
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    // --- 3. BUCLE DE ANIMACIÓN ---
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
+    let time = 0;
+    let animationFrameId: number;
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const w = canvas.width;
-      const h = canvas.height;
+      time += 0.01;
 
-      let targetColor = COLORS.BLUE;
-      let connectionDist = 0;
-      let speedMult = 1;
-      let targetBaseSize = 2;
+      const currentSection = sectionRef.current;
+      const isExploding = isExplodingRef.current;
 
-      if (visualMode === 'circuit') {
-        targetColor = COLORS.BLUE;
-        connectionDist = 120;
-        speedMult = 1.2;
-        targetBaseSize = 2;
-      } else if (visualMode === 'network') {
-        targetColor = COLORS.VIOLET;
-        connectionDist = 140;
-        speedMult = 0.6;
-        targetBaseSize = 4;
-      } else if (visualMode === 'floating') {
-        targetColor = COLORS.BLUE;
-        connectionDist = 0;
-        speedMult = 0.2;
-        targetBaseSize = 2;
+      const shapeNodes = nodes.filter(n => !n.isAmbient);
+      const ambientNodes = nodes.filter(n => n.isAmbient);
+
+      // Transición de colores según sección
+      let targetPalette = heroColors;
+      if (currentSection === 'projects' || currentSection === 'contact') {
+        targetPalette = bottomColors;
       }
 
-      particles.current.forEach((p, i) => {
-        // --- A. TRANSICIONES SUAVES ---
-        const sizeVariation = (Math.sin(p.pulsePhase) + 1) * 0.5;
-        const finalTargetSize = visualMode === 'network'
-          ? targetBaseSize + sizeVariation * 2
-          : targetBaseSize;
-
-        p.currentSize += (finalTargetSize - p.currentSize) * 0.05;
-        p.pulsePhase += 0.05;
-        p.colorRGB = targetColor;
-
-        // --- B. MOVIMIENTO ---
-        if (visualMode === 'circuit') {
-          if (Math.random() < 0.01) {
-            p.circuitDir = p.circuitDir === 'horizontal' ? 'vertical' : 'horizontal';
-          }
-          if (p.circuitDir === 'horizontal') {
-            p.x += (p.vx > 0 ? 1 : -1) * speedMult;
-          } else {
-            p.y += (p.vy > 0 ? 1 : -1) * speedMult;
-          }
-        } else {
-          p.x += p.vx * speedMult;
-          p.y += p.vy * speedMult;
+      // Actualizar nodos de forma
+      shapeNodes.forEach((node, i) => {
+        // Transición suave de color
+        if (Math.random() < 0.05 && node.baseColor !== whiteAccent) {
+          node.color = targetPalette[Math.floor(Math.random() * targetPalette.length)];
         }
 
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
+        // Movimiento orbital en hero
+        if (currentSection === 'hero' || currentSection === 'about') {
+          const angle = time * 0.2 + (i * 0.1);
+          const radius = 200 + Math.sin(time * 0.5 + i) * 50;
+          node.targetX = canvas.width / 2 + Math.cos(angle) * radius * Math.sin(time * 0.1);
+          node.targetY = canvas.height / 2 + Math.sin(angle) * radius;
+        } else {
+          // Movimiento más libre en otras secciones
+          node.targetX = canvas.width / 2 + Math.cos(time * 0.3 + i) * 300;
+          node.targetY = canvas.height / 2 + Math.sin(time * 0.3 + i) * 300;
+        }
 
-        const dx = mouse.current.x - p.x;
-        const dy = mouse.current.y - p.y;
+        if (isExploding) {
+          node.targetX += (Math.random() - 0.5) * 800;
+          node.targetY += (Math.random() - 0.5) * 800;
+        }
+
+        const dx = node.targetX - node.x;
+        const dy = node.targetY - node.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 150) {
-          p.x -= dx * 0.01;
-          p.y -= dy * 0.01;
+
+        const speed = dist < 100 ? (dist / 100) * 8 : 8;
+        const steerX = (dx / dist) * speed - node.vx;
+        const steerY = (dy / dist) * speed - node.vy;
+
+        node.vx += steerX * 0.1;
+        node.vy += steerY * 0.1;
+
+        const dxMouse = node.x - mouseRef.current.x;
+        const dyMouse = node.y - mouseRef.current.y;
+        const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+
+        if (distMouse < 150) {
+          const force = (150 - distMouse) / 150;
+          node.vx += (dxMouse / distMouse) * force * 3;
+          node.vy += (dyMouse / distMouse) * force * 3;
         }
 
-        // --- C. DIBUJADO DE NODOS ---
-        // Efecto Cyberpunk en modo circuito
-        if (visualMode === 'circuit' && p.isPulseNode) {
-          const pulseIntensity = (Math.sin(p.pulsePhase * 2) + 1) * 0.5;
-          // Glow exterior
-          ctx.shadowBlur = 8 * pulseIntensity;
-          ctx.shadowColor = `rgba(${COLORS.CYAN}, ${pulseIntensity * 0.8})`;
+        node.x += node.vx;
+        node.y += node.vy;
+        node.vx *= 0.90;
+        node.vy *= 0.90;
 
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.currentSize * (1 + pulseIntensity * 0.3), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${COLORS.CYAN}, ${0.6 + pulseIntensity * 0.4})`;
-          ctx.fill();
+        ctx.globalAlpha = node.opacity;
+        ctx.fillStyle = node.color;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+        ctx.fill();
 
-          ctx.shadowBlur = 0;
-        } else {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.currentSize, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${p.colorRGB}, ${visualMode === 'network' ? 0.6 : 0.8})`;
-          ctx.fill();
-        }
-
-        // --- D. CONEXIONES ---
-        if (connectionDist > 0) {
-          for (let j = i + 1; j < particles.current.length; j++) {
-            const p2 = particles.current[j];
-            const dx = p.x - p2.x;
-            const dy = p.y - p2.y;
-
-            if (Math.abs(dx) > connectionDist || Math.abs(dy) > connectionDist) continue;
-
-            const distSq = dx * dx + dy * dy;
-            if (distSq < connectionDist * connectionDist) {
-              const dist = Math.sqrt(distSq);
-              const alpha = 1 - dist / connectionDist;
-
-              if (visualMode === 'circuit') {
-                const alignmentThreshold = 2.0;
-                if (Math.abs(dx) < alignmentThreshold || Math.abs(dy) < alignmentThreshold) {
-                  ctx.beginPath();
-                  ctx.moveTo(p.x, p.y);
-                  ctx.lineTo(p2.x, p2.y);
-
-                  // Líneas con glow sutil si conectan nodos pulsantes
-                  if (p.isPulseNode || p2.isPulseNode) {
-                    ctx.strokeStyle = `rgba(${COLORS.CYAN}, ${alpha * 0.4})`;
-                    ctx.lineWidth = 1.2;
-                  } else {
-                    ctx.strokeStyle = `rgba(${p.colorRGB}, ${alpha * 0.5})`;
-                    ctx.lineWidth = 1;
-                  }
-                  ctx.stroke();
-                }
-              } else {
-                // Patrón hexagonal sutil para redes
-                const angle = Math.atan2(dy, dx);
-                const hexBias = Math.abs(Math.sin(angle * 3)) > 0.7; // Favorece ángulos de 60°
-
-                if (hexBias || Math.random() < 0.3) { // 30% de conexiones aleatorias
-                  ctx.beginPath();
-                  ctx.moveTo(p.x, p.y);
-                  ctx.lineTo(p2.x, p2.y);
-                  ctx.strokeStyle = `rgba(${p.colorRGB}, ${alpha * 0.25})`;
-                  ctx.lineWidth = 0.5;
-                  ctx.stroke();
-                }
-              }
-            }
+        // Conexiones de red neuronal
+        shapeNodes.slice(i + 1, i + 3).forEach(other => {
+          const dX = node.x - other.x;
+          const dY = node.y - other.y;
+          if (Math.abs(dX) < 50 && Math.abs(dY) < 50) {
+            ctx.beginPath();
+            ctx.moveTo(node.x, node.y);
+            ctx.lineTo(other.x, other.y);
+            ctx.strokeStyle = node.color;
+            ctx.lineWidth = 0.2;
+            ctx.globalAlpha = 0.1;
+            ctx.stroke();
           }
-        }
+        });
       });
 
-      animationRef.current = requestAnimationFrame(animate);
+      // Nodos ambientes flotando
+      ambientNodes.forEach(node => {
+        if (Math.random() < 0.05 && node.baseColor !== whiteAccent) {
+          node.color = targetPalette[Math.floor(Math.random() * targetPalette.length)];
+        }
+
+        node.targetX = node.x + Math.sin(time + node.x) * 20;
+        node.targetY = node.y + Math.cos(time + node.y) * 20;
+
+        const dx = node.targetX - node.x;
+        const dy = node.targetY - node.y;
+
+        node.vx += dx * 0.001;
+        node.vy += dy * 0.001;
+
+        node.x += node.vx;
+        node.y += node.vy;
+        node.vx *= 0.95;
+        node.vy *= 0.95;
+
+        if (node.x < 0) node.x = canvas.width;
+        if (node.x > canvas.width) node.x = 0;
+        if (node.y < 0) node.y = canvas.height;
+        if (node.y > canvas.height) node.y = 0;
+
+        ctx.globalAlpha = node.opacity * 0.5;
+        ctx.fillStyle = node.color;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
     };
 
     animate();
 
-    const handleResize = () => initParticles();
-    const handleMouseMove = (e: MouseEvent) => {
-      mouse.current.x = e.clientX;
-      mouse.current.y = e.clientY;
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
-
     return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
     };
-  }, [visualMode]);
+  }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full pointer-events-none z-0"
+      className="fixed inset-0 pointer-events-none z-10"
+      style={{
+        background: 'transparent',
+        mixBlendMode: 'multiply'
+      }}
     />
   );
-};
-
-export default DynamicNodesGrid;
+}
