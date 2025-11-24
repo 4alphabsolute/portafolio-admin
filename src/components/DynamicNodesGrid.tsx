@@ -9,12 +9,14 @@ interface Node {
   homeY: number;
   size: number;
   color: string;
-  targetColor: string; // Para transiciones suaves de color
+  targetColor: string;
   opacity: number;
-  targetOpacity: number; // Para fade-in suave
+  targetOpacity: number;
   type: 'data' | 'finance' | 'tech' | 'innovation';
   pulse: number;
   behavior?: string;
+  lifeState: 'spawning' | 'alive' | 'dying';
+  deathProgress: number;
 }
 
 export default function DynamicNodesGrid() {
@@ -205,8 +207,18 @@ export default function DynamicNodesGrid() {
     const createNodes = (config: any) => {
       const exclusionZones = config.respectZones ? getExclusionZones() : [];
 
+      // Marcar nodos excedentes para fade-out en lugar de eliminarlos directamente
       while (nodes.length > config.nodeCount) {
-        nodes.pop();
+        const node = nodes[nodes.length - 1];
+        if (node.lifeState === 'alive' || node.lifeState === 'spawning') {
+          node.lifeState = 'dying';
+          node.deathProgress = 0;
+          break; // Solo marcar uno por frame para transición suave
+        } else if (node.lifeState === 'dying' && node.deathProgress >= 1) {
+          nodes.pop(); // Eliminar solo cuando sea invisible
+        } else {
+          break; // Esperar a que termine el fade-out
+        }
       }
 
       while (nodes.length < config.nodeCount) {
@@ -233,7 +245,9 @@ export default function DynamicNodesGrid() {
           targetOpacity: config.opacity + Math.random() * 0.1,
           type: 'data',
           pulse: Math.random() * Math.PI * 2,
-          behavior: config.behavior || 'normal'
+          behavior: config.behavior || 'normal',
+          lifeState: 'spawning',
+          deathProgress: 0
         });
       }
     };
@@ -241,7 +255,6 @@ export default function DynamicNodesGrid() {
     let currentConfig = getConfigForPosition(0);
     createNodes(currentConfig);
 
-    // Helper para interpolar colores
     const lerpColor = (color1: string, color2: string, t: number): string => {
       if (color1 === color2) return color1;
 
@@ -292,14 +305,20 @@ export default function DynamicNodesGrid() {
 
       const exclusionZones = currentConfig.respectZones ? getExclusionZones() : [];
 
-      // Detectar movimiento de scroll para añadir impulso sutil
       const scrollDelta = (window.scrollY - lastScrollY.current) * 0.0001;
       lastScrollY.current = window.scrollY;
 
       nodes.forEach((node, index) => {
-        // Fade-in suave para nuevos nodos
-        if (node.opacity < node.targetOpacity) {
-          node.opacity += 0.02;
+        // Gestión del ciclo de vida
+        if (node.lifeState === 'spawning') {
+          if (node.opacity < node.targetOpacity) {
+            node.opacity += 0.02;
+          } else {
+            node.lifeState = 'alive';
+          }
+        } else if (node.lifeState === 'dying') {
+          node.deathProgress += 0.02;
+          node.opacity = node.targetOpacity * (1 - node.deathProgress);
         }
 
         // Lerp de color suave
@@ -343,7 +362,6 @@ export default function DynamicNodesGrid() {
           node.vy += settled * 0.0008;
         }
 
-        // PERTURBACIÓN SUTIL (movimiento 3/10)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
@@ -354,7 +372,6 @@ export default function DynamicNodesGrid() {
           node.vy += (dyMouse / distMouse) * force * 0.015;
         }
 
-        // FUERZA DE RETORNO (Spring)
         const dxHome = node.homeX - node.x;
         const dyHome = node.homeY - node.y;
         const springStrength = 0.003;
@@ -362,7 +379,6 @@ export default function DynamicNodesGrid() {
         node.vx += dxHome * springStrength;
         node.vy += dyHome * springStrength;
 
-        // DAMPING (3/10)
         node.vx *= 0.90;
         node.vy *= 0.90;
 
@@ -373,7 +389,6 @@ export default function DynamicNodesGrid() {
         if (node.x <= 0 || node.x >= canvas.width) node.vx *= -1;
         if (node.y <= 0 || node.y >= canvas.height) node.vy *= -1;
 
-        // REPULSIÓN SUAVE EN ZONAS HERO
         exclusionZones.forEach((zone: any) => {
           if (zone.isHero) {
             const zoneCenterX = zone.x + zone.width / 2;
@@ -410,7 +425,7 @@ export default function DynamicNodesGrid() {
             const midY = (node.y + otherNode.y) / 2;
 
             if (!isInExclusionZone(midX, midY, exclusionZones)) {
-              ctx.globalAlpha = connectionOpacity;
+              ctx.globalAlpha = connectionOpacity * Math.min(node.opacity, otherNode.opacity) / currentConfig.opacity;
               ctx.strokeStyle = node.color;
               ctx.lineWidth = 1.2;
               ctx.beginPath();

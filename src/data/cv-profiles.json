@@ -1,8 +1,16 @@
 {
+  "contact": {
+    "name": "Andrés Almeida",
+    "phone": "(+34) 633-084828",
+    "location": "Madrid, España",
+    "email": "soyandresalmeida@gmail.com",
+    "linkedin": "https://linkedin.com/in/soyandresalmeida",
+    "website": "https://soyandresalmeida.com"
+  },
   "profiles": {
     "MASTER": {
       "title": "Analista Híbrido de Datos y Negocio",
-      "description": "Analista híbrido de Datos y Negocio con base financiera y experiencia en banca y seguros. Transformo datos fragmentados en información confiable para comités ejecutivos mediante BI, análisis financiero y automatización. Manejo de Power BI, SQL, R y herramientas low-code para reportería, validación del dato y prototipado analítico.",
+      "description": "Analista híbrido de Datos y Negocio con base financiera y experiencia en banca y seguros. Transformo datos fragmentados en información confiable mediante BI, análisis financiero y automatización. Manejo de Power BI, SQL, R y herramientas low-code para reportería y validación del dato.",
       "keywords": [
         "business intelligence",
         "datos",
@@ -20,7 +28,7 @@
     },
     "BI": {
       "title": "Analista de Business Intelligence",
-      "description": "Analista de Business Intelligence con experiencia en modelado de datos, reportería ejecutiva, dashboards estratégicos y definición de KPIs. Capacidad para estructurar información dispersa, mejorar calidad del dato y automatizar procesos con SQL, R y Power BI.",
+      "description": "Analista de Business Intelligence con experiencia en modelado de datos, reportería ejecutiva y dashboards estratégicos. Capacidad para mejorar calidad del dato, estructurar información dispersa y automatizar procesos con SQL, R y Power BI.",
       "keywords": [
         "business intelligence",
         "power bi",
@@ -38,7 +46,7 @@
     },
     "DATA": {
       "title": "Analista de Datos",
-      "description": "Analista de Datos orientado a limpieza, validación, transformación, integración y análisis de datasets complejos. Manejo de SQL, R (tidyverse), automatización low-code e IA aplicada para convertir datos crudos en insights claros.",
+      "description": "Analista de Datos orientado a limpieza, validación, integración y análisis de datasets complejos. Manejo de SQL, R (tidyverse), automatización low-code e IA aplicada para generar insights claros y accionables.",
       "keywords": [
         "datos",
         "sql",
@@ -56,7 +64,7 @@
     },
     "FINANZAS": {
       "title": "Analista Financiero",
-      "description": "Analista Financiero con especialización en riesgo crediticio, análisis de estados financieros, flujos de caja y KPIs corporativos. Integración de BI (Power BI, SQL, R) para preparar reportes estratégicos y análisis técnicos para comités ejecutivos.",
+      "description": "Analista Financiero con foco en riesgo crediticio, estados financieros, flujos de caja y KPIs corporativos. Integración de BI (Power BI, SQL, R) para generar reportes estratégicos y análisis técnicos para comités ejecutivos.",
       "keywords": [
         "finanzas",
         "riesgo",
@@ -73,7 +81,7 @@
     },
     "CONSULTOR": {
       "title": "Consultor de Soluciones Digitales",
-      "description": "Consultor de Soluciones Digitales orientado a transformar ideas en herramientas reales mediante IA generativa, automatización low-code y análisis de datos. Desarrollo asistentes conversacionales, dashboards ejecutivos, flujos automáticos y webs funcionales sin infraestructura compleja.\\n\\nExperiencia combinada en economía, BI y trading (criptoactivos, futuros, análisis técnico, indicadores propios y metodología Wyckoff). Capacidad para interpretar datos desde una perspectiva estratégica y convertirlos en decisiones accionables. Si necesitas claridad, automatización o una solución digital rápida y funcional, yo te la construyo.",
+      "description": "Consultor de Soluciones Digitales orientado a transformar ideas en herramientas reales mediante IA generativa, automatización low-code y análisis de datos. Desarrollo asistentes conversacionales, dashboards ejecutivos, flujos automáticos y webs funcionales sin infraestructura compleja.\n\nExperiencia combinada en economía, BI y trading (criptoactivos, futuros, análisis técnico, indicadores propios y metodología Wyckoff). Capacidad para interpretar datos desde una perspectiva estratégica y convertirlos en decisiones accionables. Si necesitas claridad, automatización o una solución digital rápida y funcional, yo te la construyo.",
       "keywords": [
         "consultoría",
         "ia",
@@ -92,6 +100,112 @@
         "Firebase"
       ]
     }
+  },
+  "experience": [
+    {
+      "title": "Especialista de Control y Gestión del Dato",
+      "company": "Banesco Seguros",
+      "period": "Mar 2025 – Jun 2025",
+      "location": "Venezuela",
+      "responsibilities": [
+        "Automatización de reportes actuariales y financieros con R e IA, mejorando precisión y reduciendo tiempos operativos.",
+        "Desarrollo de dashboards estratégicos en Power BI (costos, ventas, cobranzas).",
+        "Identificación de fallas estructurales en la arquitectura de datos y propuesta de mejoras de gobernanza.",
+        "Integración con equipos actuariales y de negocio para estandarizar criterios y mejorar consistencia del dato."
+      ]
+    },
+    {
+      "title": "Analista de Crédito",
+      "company": "Banesco Banco Universal",
+      "period": "Feb 2024 – Feb 2025",
+      "location": "Venezuela",
+      "responsibilities": [
+        "Análisis de riesgo financiero mediante flujos de caja, reclasificaciones y KPIs financieros.",
+        "Preparación y defensa de casos ante el Comité Ejecutivo de Crédito.",
+        "Apoyo a áreas comerciales equilibrando análisis técnico y contexto macroeconómico.",
+        "Evaluación de clientes corporativos mediante liquidez, rentabilidad y flujo de efectivo."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "MBA",
+      "institution": "EUDE Business School",
+      "location": "Madrid, España",
+      "period": "2025 – En curso",
+      "status": "En curso"
+    },
+    {
+      "degree": "Máster en Business Intelligence y Big Data Analytics",
+      "institution": "EUDE Business School",
+      "location": "Madrid, España",
+      "period": "2024 – 2025",
+      "status": "Completado"
+    },
+    {
+      "degree": "Economía",
+      "institution": "Universidad Católica Andrés Bello",
+      "location": "Venezuela",
+      "period": "2018 – 2024",
+      "status": "Completado"
+    },
+    {
+      "degree": "Ingeniería Informática (5 semestres)",
+      "institution": "Universidad Católica Andrés Bello",
+      "location": "Venezuela",
+      "period": "2015 – 2018",
+      "status": "Incompleto"
+    }
+  ],
+  "skills": {
+    "bi": [
+      "Power BI",
+      "DAX",
+      "Power Query",
+      "Dashboards ejecutivos"
+    ],
+    "data": [
+      "SQL (TOAD for Oracle)",
+      "R (tidyverse)",
+      "Excel avanzado"
+    ],
+    "ai_automation": [
+      "Generative AI",
+      "Flowise",
+      "Asistentes conversacionales",
+      "Firebase",
+      "Low-code automation"
+    ],
+    "finance": [
+      "Riesgo crediticio",
+      "Análisis financiero",
+      "Flujos de caja",
+      "KPIs"
+    ],
+    "programming": [
+      "Python (fundamentos)",
+      "Macros",
+      "Prototipado asistido por IA"
+    ],
+    "trading": [
+      "Criptoactivos",
+      "Futuros",
+      "Análisis técnico",
+      "Indicadores propios",
+      "Metodología Wyckoff"
+    ]
+  },
+  "soft_skills": [
+    "Pensamiento crítico",
+    "Comunicación clara",
+    "Adaptabilidad",
+    "Aprendizaje rápido",
+    "Trabajo colaborativo",
+    "Criterio analítico"
+  ],
+  "languages": {
+    "spanish": "Nativo",
+    "english": "B2"
   },
   "user_detection": {
     "recruiter_patterns": [
