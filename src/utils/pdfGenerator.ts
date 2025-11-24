@@ -36,7 +36,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
   const locationText = language === 'en' ? 'Madrid, Spain' : 'Madrid, España';
   doc.text(`(+34) 633-084828 • ${locationText} • soyandresalmeida@gmail.com`, pageWidth / 2, yPosition, { align: 'center' });
   yPosition += 5;
-  doc.text('LinkedIn: linkedin.com/in/soyandresalmeida • Web: andresalmeida-portafolio.web.app', pageWidth / 2, yPosition, { align: 'center' });
+  doc.text('LinkedIn: linkedin.com/in/soyandresalmeida • Web: soyandresalmeida.com', pageWidth / 2, yPosition, { align: 'center' });
   yPosition += 15;
 
   addSeparatorLine();
@@ -51,7 +51,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  
+
   // Descripción en inglés si es necesario
   let profileDescription = profile.description;
   if (language === 'en') {
@@ -64,7 +64,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
     };
     profileDescription = englishDescriptions[profileType] || profile.description;
   }
-  
+
   const profileText = doc.splitTextToSize(profileDescription, pageWidth - 2 * margin);
   doc.text(profileText, margin, yPosition);
   yPosition += profileText.length * 4 + 10;
@@ -86,7 +86,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
   doc.setFont('helvetica', 'normal');
   doc.text('Mar 2025 – Jun 2025', pageWidth - margin - 40, yPosition);
   yPosition += 5;
-  
+
   doc.setFont('helvetica', 'italic');
   doc.text('Banesco Seguros', margin, yPosition);
   yPosition += 6;
@@ -97,7 +97,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
     '• Identificación de fallas estructurales en arquitectura de datos',
     '• Integración con áreas actuariales para estandarizar criterios'
   ];
-  
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   segurosItems.forEach(item => {
@@ -115,7 +115,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
   doc.setFont('helvetica', 'normal');
   doc.text('Feb 2024 – Feb 2025', pageWidth - margin - 40, yPosition);
   yPosition += 5;
-  
+
   doc.setFont('helvetica', 'italic');
   doc.text('Banesco Banco Universal', margin, yPosition);
   yPosition += 6;
@@ -126,7 +126,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
     '• Evaluación de clientes corporativos (liquidez, rentabilidad, flujo efectivo)',
     '• Apoyo comercial equilibrando análisis técnico y contexto macroeconómico'
   ];
-  
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   bancoItems.forEach(item => {
@@ -208,7 +208,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  
+
   const skillsText = [
     `Business Intelligence: ${profile.skills_focus.includes('Power BI') ? 'Power BI (Avanzado), DAX, Power Query, dashboards ejecutivos' : 'Power BI, DAX, Power Query'}`,
     `Datos: ${profile.skills_focus.includes('SQL') ? 'SQL (TOAD for Oracle - Avanzado), R (tidyverse, automatización), Excel avanzado' : 'SQL, R, Excel avanzado'}`,
@@ -231,7 +231,7 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
   if (yPosition < pageHeight - 50) {
     yPosition += 5;
     addSeparatorLine();
-    
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     const softSkillsTitle = language === 'en' ? 'SOFT SKILLS & LANGUAGES' : 'SOFT SKILLS E IDIOMAS';
@@ -249,10 +249,10 @@ export const generateDynamicCV = (profileType: keyof typeof cvProfiles.profiles,
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    const softSkills = language === 'en' ? 
+    const softSkills = language === 'en' ?
       ['Critical thinking', 'Clear communication', 'Adaptability', 'Fast learning', 'Collaborative work'] :
       ['Pensamiento crítico', 'Comunicación clara', 'Adaptabilidad', 'Aprendizaje rápido', 'Trabajo colaborativo'];
-    const idiomas = language === 'en' ? 
+    const idiomas = language === 'en' ?
       ['Spanish (Native)', 'English (B2)'] :
       ['Español (Nativo)', 'Inglés (B2)'];
 

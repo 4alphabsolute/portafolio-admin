@@ -291,7 +291,7 @@ MY COMPLETE PROFILE:
 - MBA EUDE Business School (ongoing) + BI Master completed
 - Skills: Power BI (DAX), R (tidyverse), SQL (Oracle), Python, financial analysis
 - Madrid, Spain | soyandresalmeida@gmail.com
-- Web: https://andresalmeida-portafolio.web.app
+- Web: https://soyandresalmeida.com
 
 PERSONALITY: ${personalityConfig.personality.communication_style}
 STRENGTHS: ${personalityConfig.personality.strengths.join(', ')}
@@ -313,7 +313,7 @@ MI PERFIL COMPLETO:
 - MBA EUDE Business School (cursando) + Máster BI completado
 - Skills: Power BI (DAX), R (tidyverse), SQL (Oracle), Python, análisis financiero
 - Madrid, España | soyandresalmeida@gmail.com
-- Web: https://andresalmeida-portafolio.web.app
+- Web: https://soyandresalmeida.com
 
 PERSONALIDAD: ${personalityConfig.personality.communication_style}
 FORTALEZAS: ${personalityConfig.personality.strengths.join(', ')}
@@ -428,8 +428,8 @@ Pregunta: ${question}`;
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[80%] p-3 rounded-2xl shadow-sm ${m.from === 'user'
-                    ? 'bg-[#0A66C2] text-white rounded-br-md'
-                    : 'bg-white text-gray-800 rounded-bl-md border'
+                  ? 'bg-[#0A66C2] text-white rounded-br-md'
+                  : 'bg-white text-gray-800 rounded-bl-md border'
                   }`}>
                   <div
                     className={`text-sm leading-relaxed prose prose-sm max-w-none ${m.from === 'user' ? 'prose-invert' : 'prose-gray'

@@ -15,7 +15,10 @@
       "startDate": "2025",
       "endDate": "2025",
       "description": "Automatización de reportes actuariales y financieros en R, mejorando consistencia y tiempos de entrega. Desarrollo de dashboards estratégicos en Power BI integrando costos, ventas y reservas. Diagnóstico de fallas estructurales en la arquitectura de datos y propuestas de mejora de gobernanza. Estandarización de definiciones y criterios analíticos entre áreas actuariales y gerenciales.",
-      "technologies": ["R", "Power BI"]
+      "technologies": [
+        "R",
+        "Power BI"
+      ]
     },
     {
       "id": 2,
@@ -63,18 +66,35 @@
   ],
   "skills": {
     "frontend": [],
-    "backend": ["R (tidyverse)", "Python"],
-    "database": ["SQL (TOAD/Oracle)"],
+    "backend": [
+      "R (tidyverse)",
+      "Python"
+    ],
+    "database": [
+      "SQL (TOAD/Oracle)"
+    ],
     "cloud": [],
-    "tools": ["Power BI (modelado, DAX)", "Análisis de flujos de caja", "Análisis de estados financieros", "Análisis de riesgo", "Automatización low-code"]
+    "tools": [
+      "Power BI (modelado, DAX)",
+      "Análisis de flujos de caja",
+      "Análisis de estados financieros",
+      "Análisis de riesgo",
+      "Automatización low-code"
+    ]
   },
   "projects": [
     {
       "id": 1,
       "name": "Mi Portafolio",
       "description": "Portafolio personal con chatbot integrado usando Flowise y Gemini",
-      "technologies": ["React", "TypeScript", "Tailwind", "Firebase", "Flowise"],
-      "url": "https://andresalmeida-portafolio.web.app",
+      "technologies": [
+        "React",
+        "TypeScript",
+        "Tailwind",
+        "Firebase",
+        "Flowise"
+      ],
+      "url": "https://soyandresalmeida.com",
       "github": "https://github.com/usuario/miportafolio"
     }
   ],
