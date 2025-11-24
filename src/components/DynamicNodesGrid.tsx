@@ -5,6 +5,8 @@ interface Node {
   y: number;
   vx: number;
   vy: number;
+  homeX: number; // Posición original/ancla
+  homeY: number; // Posición original/ancla
   size: number;
   color: string;
   opacity: number;
@@ -109,7 +111,7 @@ export default function DynamicNodesGrid() {
         return {
           nodeCount: 14,
           colors: ['#0A66C2', '#3B82F6', '#60A5FA'],
-          baseSize: 8, // Nodos más grandes y "rígidos"
+          baseSize: 8,
           speed: 0.15,
           connectionDistance: 180,
           opacity: 0.7,
@@ -127,7 +129,7 @@ export default function DynamicNodesGrid() {
           colors: t < 0.5 ?
             ['#3B82F6', '#6B7280', '#9CA3AF'] :
             ['#6B7280', '#9CA3AF', '#D1D5DB'],
-          baseSize: 8 - t * 2, // Transición suave desde 8
+          baseSize: 8 - t * 2,
           speed: 0.15 - t * 0.08,
           connectionDistance: 180 - t * 60,
           opacity: 0.7 - t * 0.3,
@@ -216,8 +218,10 @@ export default function DynamicNodesGrid() {
         nodes.push({
           x,
           y,
-          vx: (Math.random() - 0.5) * config.speed,
-          vy: (Math.random() - 0.5) * config.speed,
+          homeX: x,
+          homeY: y,
+          vx: (Math.random() - 0.5) * config.speed * 0.1,
+          vy: (Math.random() - 0.5) * config.speed * 0.1,
           size: config.baseSize + Math.random() * 2,
           color: config.colors[Math.floor(Math.random() * config.colors.length)],
           opacity: config.opacity + Math.random() * 0.1,
@@ -264,13 +268,13 @@ export default function DynamicNodesGrid() {
         if (node.behavior === 'cybernetic') {
           node.pulse += 0.01;
           const variation = Math.sin(node.pulse) * 0.1;
-          node.vx += variation * 0.005;
-          node.vy += variation * 0.005;
+          node.vx += variation * 0.002;
+          node.vy += variation * 0.002;
         } else if (node.behavior === 'transitioning') {
           node.pulse += 0.008;
           const transition = Math.sin(node.pulse) * 0.05;
-          node.vx += transition * 0.003;
-          node.vy += transition * 0.003;
+          node.vx += transition * 0.001;
+          node.vy += transition * 0.001;
         } else if (node.behavior === 'respectful') {
           const futureX = node.x + node.vx * 10;
           const futureY = node.y + node.vy * 10;
@@ -278,33 +282,44 @@ export default function DynamicNodesGrid() {
           if (isInExclusionZone(futureX, futureY, exclusionZones)) {
             node.vx *= -0.8;
             node.vy *= -0.8;
-            node.vx += (Math.random() - 0.5) * 0.02;
-            node.vy += (Math.random() - 0.5) * 0.02;
+            node.vx += (Math.random() - 0.5) * 0.01;
+            node.vy += (Math.random() - 0.5) * 0.01;
           }
           node.pulse += 0.005;
         } else if (node.behavior === 'awakening') {
           node.pulse += 0.01;
           const awakening = Math.sin(node.pulse) * 0.08;
-          node.vx += awakening * 0.004;
-          node.vy += awakening * 0.004;
+          node.vx += awakening * 0.002;
+          node.vy += awakening * 0.002;
         } else if (node.behavior === 'settled') {
           node.pulse += 0.003;
           const settled = Math.sin(node.pulse) * 0.02;
-          node.vx += settled * 0.001;
-          node.vy += settled * 0.001;
+          node.vx += settled * 0.0005;
+          node.vy += settled * 0.0005;
         }
 
-        // PERTURBACIÓN ULTRA SUTIL (como plancton en mar profundo)
+        // PERTURBACIÓN ULTRA SUTIL + RETORNO A POSICIÓN ORIGINAL (como pececitos Antigravity)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
 
-        if (distMouse < 200) {
-          const force = (200 - distMouse) / 200;
-          // Perturbación EXTREMADAMENTE LEVE - los nodos se mueven perezosamente
-          node.vx += (dxMouse / distMouse) * force * 0.03;
-          node.vy += (dyMouse / distMouse) * force * 0.03;
+        if (distMouse < 250) {
+          const force = (250 - distMouse) / 250;
+          node.vx += (dxMouse / distMouse) * force * 0.01;
+          node.vy += (dyMouse / distMouse) * force * 0.01;
         }
+
+        // FUERZA DE RETORNO (Spring) - volver a la posición original
+        const dxHome = node.homeX - node.x;
+        const dyHome = node.homeY - node.y;
+        const springStrength = 0.002;
+
+        node.vx += dxHome * springStrength;
+        node.vy += dyHome * springStrength;
+
+        // DAMPING - reducir velocidad gradualmente (efecto gelatina)
+        node.vx *= 0.92;
+        node.vy *= 0.92;
 
         node.x += node.vx;
         node.y += node.vy;
