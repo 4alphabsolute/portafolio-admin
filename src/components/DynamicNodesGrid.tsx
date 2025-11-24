@@ -5,11 +5,13 @@ interface Node {
   y: number;
   vx: number;
   vy: number;
-  homeX: number; // Posición original/ancla
-  homeY: number; // Posición original/ancla
+  homeX: number;
+  homeY: number;
   size: number;
   color: string;
+  targetColor: string; // Para transiciones suaves de color
   opacity: number;
+  targetOpacity: number; // Para fade-in suave
   type: 'data' | 'finance' | 'tech' | 'innovation';
   pulse: number;
   behavior?: string;
@@ -18,6 +20,7 @@ interface Node {
 export default function DynamicNodesGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -215,16 +218,19 @@ export default function DynamicNodesGrid() {
           attempts++;
         } while (isInExclusionZone(x, y, exclusionZones) && attempts < 50);
 
+        const newColor = config.colors[Math.floor(Math.random() * config.colors.length)];
         nodes.push({
           x,
           y,
           homeX: x,
           homeY: y,
-          vx: (Math.random() - 0.5) * config.speed * 0.1,
-          vy: (Math.random() - 0.5) * config.speed * 0.1,
+          vx: (Math.random() - 0.5) * config.speed * 0.15,
+          vy: (Math.random() - 0.5) * config.speed * 0.15,
           size: config.baseSize + Math.random() * 2,
-          color: config.colors[Math.floor(Math.random() * config.colors.length)],
-          opacity: config.opacity + Math.random() * 0.1,
+          color: newColor,
+          targetColor: newColor,
+          opacity: 0,
+          targetOpacity: config.opacity + Math.random() * 0.1,
           type: 'data',
           pulse: Math.random() * Math.PI * 2,
           behavior: config.behavior || 'normal'
@@ -234,6 +240,28 @@ export default function DynamicNodesGrid() {
 
     let currentConfig = getConfigForPosition(0);
     createNodes(currentConfig);
+
+    // Helper para interpolar colores
+    const lerpColor = (color1: string, color2: string, t: number): string => {
+      if (color1 === color2) return color1;
+
+      const hex1 = color1.replace('#', '');
+      const hex2 = color2.replace('#', '');
+
+      const r1 = parseInt(hex1.substring(0, 2), 16);
+      const g1 = parseInt(hex1.substring(2, 4), 16);
+      const b1 = parseInt(hex1.substring(4, 6), 16);
+
+      const r2 = parseInt(hex2.substring(0, 2), 16);
+      const g2 = parseInt(hex2.substring(2, 4), 16);
+      const b2 = parseInt(hex2.substring(4, 6), 16);
+
+      const r = Math.round(r1 + (r2 - r1) * t);
+      const g = Math.round(g1 + (g2 - g1) * t);
+      const b = Math.round(b1 + (b2 - b1) * t);
+
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    };
 
     const drawNeuralNode = (node: Node, breathe: number) => {
       const radius = node.size * breathe;
@@ -264,17 +292,34 @@ export default function DynamicNodesGrid() {
 
       const exclusionZones = currentConfig.respectZones ? getExclusionZones() : [];
 
+      // Detectar movimiento de scroll para añadir impulso sutil
+      const scrollDelta = (window.scrollY - lastScrollY.current) * 0.0001;
+      lastScrollY.current = window.scrollY;
+
       nodes.forEach((node, index) => {
+        // Fade-in suave para nuevos nodos
+        if (node.opacity < node.targetOpacity) {
+          node.opacity += 0.02;
+        }
+
+        // Lerp de color suave
+        if (node.color !== node.targetColor) {
+          node.color = lerpColor(node.color, node.targetColor, 0.05);
+        }
+
+        // Impulso sutil del scroll
+        node.vy += scrollDelta;
+
         if (node.behavior === 'cybernetic') {
           node.pulse += 0.01;
           const variation = Math.sin(node.pulse) * 0.1;
-          node.vx += variation * 0.002;
-          node.vy += variation * 0.002;
+          node.vx += variation * 0.003;
+          node.vy += variation * 0.003;
         } else if (node.behavior === 'transitioning') {
           node.pulse += 0.008;
           const transition = Math.sin(node.pulse) * 0.05;
-          node.vx += transition * 0.001;
-          node.vy += transition * 0.001;
+          node.vx += transition * 0.0015;
+          node.vy += transition * 0.0015;
         } else if (node.behavior === 'respectful') {
           const futureX = node.x + node.vx * 10;
           const futureY = node.y + node.vy * 10;
@@ -289,37 +334,37 @@ export default function DynamicNodesGrid() {
         } else if (node.behavior === 'awakening') {
           node.pulse += 0.01;
           const awakening = Math.sin(node.pulse) * 0.08;
-          node.vx += awakening * 0.002;
-          node.vy += awakening * 0.002;
+          node.vx += awakening * 0.003;
+          node.vy += awakening * 0.003;
         } else if (node.behavior === 'settled') {
           node.pulse += 0.003;
           const settled = Math.sin(node.pulse) * 0.02;
-          node.vx += settled * 0.0005;
-          node.vy += settled * 0.0005;
+          node.vx += settled * 0.0008;
+          node.vy += settled * 0.0008;
         }
 
-        // PERTURBACIÓN ULTRA SUTIL + RETORNO A POSICIÓN ORIGINAL (como pececitos Antigravity)
+        // PERTURBACIÓN SUTIL (movimiento 3/10)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
 
         if (distMouse < 250) {
           const force = (250 - distMouse) / 250;
-          node.vx += (dxMouse / distMouse) * force * 0.01;
-          node.vy += (dyMouse / distMouse) * force * 0.01;
+          node.vx += (dxMouse / distMouse) * force * 0.015;
+          node.vy += (dyMouse / distMouse) * force * 0.015;
         }
 
-        // FUERZA DE RETORNO (Spring) - volver a la posición original
+        // FUERZA DE RETORNO (Spring)
         const dxHome = node.homeX - node.x;
         const dyHome = node.homeY - node.y;
-        const springStrength = 0.002;
+        const springStrength = 0.003;
 
         node.vx += dxHome * springStrength;
         node.vy += dyHome * springStrength;
 
-        // DAMPING - reducir velocidad gradualmente (efecto gelatina)
-        node.vx *= 0.92;
-        node.vy *= 0.92;
+        // DAMPING (3/10)
+        node.vx *= 0.90;
+        node.vy *= 0.90;
 
         node.x += node.vx;
         node.y += node.vy;
@@ -328,7 +373,7 @@ export default function DynamicNodesGrid() {
         if (node.x <= 0 || node.x >= canvas.width) node.vx *= -1;
         if (node.y <= 0 || node.y >= canvas.height) node.vy *= -1;
 
-        // REPULSIÓN SUAVE PERO FIRME EN ZONAS HERO
+        // REPULSIÓN SUAVE EN ZONAS HERO
         exclusionZones.forEach((zone: any) => {
           if (zone.isHero) {
             const zoneCenterX = zone.x + zone.width / 2;
