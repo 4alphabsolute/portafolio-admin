@@ -109,7 +109,7 @@ export default function DynamicNodesGrid() {
         return {
           nodeCount: 14,
           colors: ['#0A66C2', '#3B82F6', '#60A5FA'],
-          baseSize: 6,
+          baseSize: 8, // Nodos más grandes y "rígidos"
           speed: 0.15,
           connectionDistance: 180,
           opacity: 0.7,
@@ -127,7 +127,7 @@ export default function DynamicNodesGrid() {
           colors: t < 0.5 ?
             ['#3B82F6', '#6B7280', '#9CA3AF'] :
             ['#6B7280', '#9CA3AF', '#D1D5DB'],
-          baseSize: 6 - t * 2,
+          baseSize: 8 - t * 2, // Transición suave desde 8
           speed: 0.15 - t * 0.08,
           connectionDistance: 180 - t * 60,
           opacity: 0.7 - t * 0.3,
@@ -294,16 +294,16 @@ export default function DynamicNodesGrid() {
           node.vy += settled * 0.001;
         }
 
-        // PERTURBACIÓN MUY SUTIL DEL MOUSE (casi imperceptible)
+        // PERTURBACIÓN ULTRA SUTIL (como plancton en mar profundo)
         const dxMouse = node.x - mouseRef.current.x;
         const dyMouse = node.y - mouseRef.current.y;
         const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
 
-        if (distMouse < 180) { // Radio más amplio pero fuerza mínima
-          const force = (180 - distMouse) / 180;
-          // Perturbación MÍNIMA - solo para sentir interactividad sin distracción
-          node.vx += (dxMouse / distMouse) * force * 0.3;
-          node.vy += (dyMouse / distMouse) * force * 0.3;
+        if (distMouse < 200) {
+          const force = (200 - distMouse) / 200;
+          // Perturbación EXTREMADAMENTE LEVE - los nodos se mueven perezosamente
+          node.vx += (dxMouse / distMouse) * force * 0.03;
+          node.vy += (dyMouse / distMouse) * force * 0.03;
         }
 
         node.x += node.vx;
