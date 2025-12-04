@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Página Principal -->
+  <url>
+    <loc>https://soyandresalmeida.com/</loc>
+    <lastmod>2025-12-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://soyandresalmeida.com/images/perfil.png</image:loc>
+      <image:caption>Andrés Almeida - Analista de Datos</image:caption>
+    </image:image>
+  </url>
+  
+  <!-- Sección Sobre mí -->
+  <url>
+    <loc>https://soyandresalmeida.com#about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Sección Experiencia -->
+  <url>
+    <loc>https://soyandresalmeida.com#experience</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Sección Proyectos -->
+  <url>
+    <loc>https://soyandresalmeida.com#projects</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Sección Blog -->
+  <url>
+    <loc>https://soyandresalmeida.com#blog</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Sección Certificaciones -->
+  <url>
+    <loc>https://soyandresalmeida.com#certifications</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Sección Contacto -->
+  <url>
+    <loc>https://soyandresalmeida.com#contact</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

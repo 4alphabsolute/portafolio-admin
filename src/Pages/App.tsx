@@ -13,6 +13,7 @@ import AndyChat from '../components/AndyChat';
 import DynamicNodesGrid from '../components/DynamicNodesGrid';
 import FloatingParticles from '../components/FloatingParticles';
 import SEO from '../components/SEO';
+import StructuredData from '../components/StructuredData';
 import { translations } from '../translations';
 
 function App() {
@@ -33,7 +34,7 @@ function App() {
 
   const t = translations[language];
 
-  // Google Tag Manager Script (Mantenido del original)
+  // Google Tag Manager Script
   useEffect(() => {
     const script = document.createElement('script');
     script.async = true;
@@ -56,7 +57,8 @@ function App() {
     <div className="min-h-screen relative" style={{
       background: 'linear-gradient(180deg, #DBEAFE 0%, #E0F2FE 8%, #F0F9FF 16%, #F8FAFC 24%, #F1F5F9 32%, #F8FAFC 40%, #F1F5F9 48%, #EEF2FF 56%, #E0E7FF 64%, #DDD6FE 72%, #C4B5FD 80%, #A78BFA 88%, #7C3AED 96%, #6D28D9 100%)'
     }}>
-      <SEO />
+      <SEO page="home" language={language} />
+      <StructuredData page="home" />
 
       {/* EL CANVAS GLOBAL QUE HACE LA MAGIA */}
       <DynamicNodesGrid />

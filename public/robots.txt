@@ -1,0 +1,29 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://soyandresalmeida.com/sitemap.xml
+
+# Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0
+
+# LinkedIn
+User-agent: LinkedInBot
+Allow: /
+
+# No scraping
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
