@@ -5,7 +5,7 @@ interface HeroProps {
   language: 'es' | 'en';
 }
 
-export default function Hero({ t }: HeroProps) {
+export default function Hero({ t, language }: HeroProps) {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -43,11 +43,14 @@ export default function Hero({ t }: HeroProps) {
           {t.hero.tagline}
         </p>
 
-        {/* Botón */}
+        {/* Botón Dossier */}
         <button
           onClick={() => {
-            const chatButton = document.querySelector('[data-chat-button]') as HTMLButtonElement;
-            if (chatButton) chatButton.click();
+            const dossierLinks = {
+              es: 'https://drive.google.com/file/d/1WKgiYN4WP3DKayQN67898Aab5r8MSoMs/view?usp=drive_link',
+              en: 'https://drive.google.com/file/d/1WKgiYN4WP3DKayQN67898Aab5r8MSoMs/view?usp=drive_link'
+            };
+            window.open(dossierLinks[language], '_blank');
           }}
           className="inline-flex items-center gap-2 bg-[#0A66C2] text-white px-7 py-3 rounded-lg text-lg font-semibold hover:bg-[#094a8f] transition transform hover:scale-105"
         >
