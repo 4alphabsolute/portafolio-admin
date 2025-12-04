@@ -4,7 +4,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import emailjs from 'emailjs-com';
 import { useFirebaseErrorHandler } from '../utils/firebaseErrorHandler';
 import { Mail, Phone, Linkedin, Instagram } from 'lucide-react';
-
+import LinkedInBadge from './LinkedInBadge';
 
 interface FormData {
   name: string;
@@ -213,6 +213,11 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
               <div className="bg-blue-800/50 rounded-xl p-6 backdrop-blur-sm">
                 <p className="text-lg font-medium mb-2">⚡ Respuesta rápida garantizada</p>
                 <p className="text-blue-100">Te contacto en menos de 24 horas</p>
+              </div>
+
+              {/* LinkedIn Badge */}
+              <div className="mt-8">
+                <LinkedInBadge />
               </div>
             </div>
 

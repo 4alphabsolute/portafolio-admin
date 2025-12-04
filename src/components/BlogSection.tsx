@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import TradingViewWidget from './TradingViewWidget';
 
 interface BlogPost {
   id?: string;
@@ -23,6 +24,7 @@ interface BlogSectionProps {
 export default function BlogSection({ t, language = 'es' }: BlogSectionProps) {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'articles' | 'analysis'>('articles');
 
   useEffect(() => {
     const fetchBlogPosts = async () => {
@@ -65,69 +67,109 @@ export default function BlogSection({ t, language = 'es' }: BlogSectionProps) {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {blogPosts.map((post, index) => (
-            <article key={post.id || index} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-4xl">{post.image || post.imageUrl}</span>
-                  <div className="flex items-center space-x-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                      {post.category}
-                    </span>
-                    {post.status === 'coming-soon' && (
-                      <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                        {t?.blog?.comingSoon || 'Próximamente'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">
-                  {post.title}
-                </h3>
-
-                <p className="text-gray-600 mb-4 leading-relaxed">
-                  {post.excerpt}
-                </p>
-
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
-                  <span>{post.date}</span>
-                  <span>{post.readTime} {t?.blog?.readTime || 'lectura'}</span>
-                </div>
-
-                {post.status === 'published' && post.linkedinUrl ? (
-                  <a
-                    href={post.linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    {t?.blog?.readOnLinkedin || 'Leer en LinkedIn'}
-                    <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd"></path>
-                    </svg>
-                  </a>
-                ) : (
-                  <button
-                    disabled
-                    className="inline-flex items-center px-6 py-3 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium"
-                  >
-                    {t?.blog?.inDevelopment || 'En desarrollo'}
-                    <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </article>
-          ))}
-          {blogPosts.length === 0 && !loading && (
-            <div className="col-span-2 text-center py-12">
-              <p className="text-gray-500 text-lg">{t?.blog?.noPosts || 'No hay artículos publicados aún.'}</p>
-            </div>
-          )}
+        {/* Tabs de Navegación */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-white/50 backdrop-blur-sm p-1 rounded-xl border border-gray-200 inline-flex">
+            <button
+              onClick={() => setActiveTab('articles')}
+              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'articles'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
+                }`}
+            >
+              {t?.blog?.tabs?.articles || 'Artículos'}
+            </button>
+            <button
+              onClick={() => setActiveTab('analysis')}
+              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'analysis'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
+                }`}
+            >
+              {t?.blog?.tabs?.analysis || 'Análisis de Mercado'}
+            </button>
+          </div>
         </div>
+
+        {activeTab === 'analysis' ? (
+          <div className="max-w-6xl mx-auto animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  {t?.blog?.analysis?.title || 'Visión de Mercado'}
+                </h3>
+                <p className="text-gray-600">
+                  {t?.blog?.analysis?.subtitle || 'Seguimiento en tiempo real de los principales índices y activos financieros.'}
+                </p>
+              </div>
+              <TradingViewWidget />
+            </div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-6xl mx-auto animate-fade-in">
+            {blogPosts.map((post, index) => (
+              <article key={post.id || index} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="p-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-4xl">{post.image || post.imageUrl}</span>
+                    <div className="flex items-center space-x-4">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        {post.category}
+                      </span>
+                      {post.status === 'coming-soon' && (
+                        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                          {t?.blog?.comingSoon || 'Próximamente'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">
+                    {post.title}
+                  </h3>
+
+                  <p className="text-gray-600 mb-4 leading-relaxed">
+                    {post.excerpt}
+                  </p>
+
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
+                    <span>{post.date}</span>
+                    <span>{post.readTime} {t?.blog?.readTime || 'lectura'}</span>
+                  </div>
+
+                  {post.status === 'published' && post.linkedinUrl ? (
+                    <a
+                      href={post.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      {t?.blog?.readOnLinkedin || 'Leer en LinkedIn'}
+                      <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                      </svg>
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      className="inline-flex items-center px-6 py-3 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium"
+                    >
+                      {t?.blog?.inDevelopment || 'En desarrollo'}
+                      <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </article>
+            ))}
+            {blogPosts.length === 0 && !loading && (
+              <div className="col-span-2 text-center py-12">
+                <p className="text-gray-500 text-lg">{t?.blog?.noPosts || 'No hay artículos publicados aún.'}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Newsletter/Follow CTA */}
         <div className="text-center mt-16">
