@@ -47,7 +47,7 @@ export default function Hero({ t, language }: HeroProps) {
         <button
           onClick={() => {
             const dossierLinks = {
-              es: 'https://drive.google.com/file/d/1WKgiYN4WP3DKayQN67898Aab5r8MSoMs/view?usp=drive_link',
+              es: 'https://drive.google.com/file/d/1ArwHQtO1ImDcwv_Vw2YKM4sTop7Knycs/view?usp=drive_link',
               en: 'https://drive.google.com/file/d/1WKgiYN4WP3DKayQN67898Aab5r8MSoMs/view?usp=drive_link'
             };
             window.open(dossierLinks[language], '_blank');
