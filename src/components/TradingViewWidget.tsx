@@ -20,7 +20,7 @@ function TradingViewWidget() {
             "isTransparent": true,
             "symbol": "NASDAQ:AAPL", // Placeholder inicial, pero el foco será el perfil abajo
             "locale": "es",
-            "customer": "andresalmeida", // Tu usuario
+            "customer": "4alphabsolute", // Tu usuario
             "showIdeas": true, // IMPORTANTE: Mostrar tus ideas
             "showChart": true
         });
@@ -48,7 +48,7 @@ function TradingViewWidget() {
             "isTransparent": true,
             "colorTheme": "light",
             "locale": "es",
-            "username": "andresalmeida", // FILTRO CLAVE: Tu usuario
+            "username": "4alphabsolute", // FILTRO CLAVE: Tu usuario
             "sort": "recent"
         });
 
@@ -59,11 +59,11 @@ function TradingViewWidget() {
         <div className="tradingview-widget-container w-full my-8 border border-gray-200 rounded-xl shadow-sm bg-white/50 backdrop-blur-sm overflow-hidden p-4">
             <div className="text-center mb-4">
                 <h4 className="text-lg font-semibold text-gray-700">Mis Ideas y Scripts en TradingView</h4>
-                <p className="text-sm text-gray-500">Análisis técnico y estrategias Pine Script publicadas por @andresalmeida</p>
+                <p className="text-sm text-gray-500">Análisis técnico y estrategias Pine Script publicadas por @4alphabsolute</p>
             </div>
             <div className="tradingview-widget-container__widget" ref={container}></div>
             <div className="tradingview-widget-copyright text-center text-xs text-gray-500 py-2">
-                <a href="https://es.tradingview.com/u/andresalmeida/" rel="noopener nofollow" target="_blank">
+                <a href="https://es.tradingview.com/u/4alphabsolute/" rel="noopener nofollow" target="_blank">
                     <span className="text-[#2962FF]">Ver perfil completo en TradingView</span>
                 </a>
             </div>
