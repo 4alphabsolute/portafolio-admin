@@ -1,32 +1,44 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import App from "./Pages/App";
-import ProfessionalDashboard from "./Pages/ProfessionalDashboard";
-import Admin from "./Pages/Admin";
 import SimpleLogin from "./components/SimpleLogin";
-import CVConverterPDFFlowise from "./components/CVConverterPDFFlowise";
+
+// Lazy load heavy components
+const ProfessionalDashboard = lazy(() => import("./Pages/ProfessionalDashboard"));
+const Admin = lazy(() => import("./Pages/Admin"));
+const CVConverterPDFFlowise = lazy(() => import("./components/CVConverterPDFFlowise"));
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const isAuth = localStorage.getItem('adminAuth') === 'true';
   return isAuth ? children : <Navigate to="/login" />;
 }
 
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+);
+
 export default function MainRoutes() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/login" element={<SimpleLogin />} />
-        <Route path="/cv-converter" element={<CVConverterPDFFlowise />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <ProfessionalDashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route path="/admin" element={<Admin />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/login" element={<SimpleLogin />} />
+          <Route path="/cv-converter" element={<CVConverterPDFFlowise />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <ProfessionalDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route path="/admin" element={<Admin />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
