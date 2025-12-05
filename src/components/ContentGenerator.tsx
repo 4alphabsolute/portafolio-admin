@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { generateBlogContent, GeneratedContent } from '../services/gemini';
 import { marked } from 'marked';
+import { checkRateLimit } from '../utils/rateLimiter';
 
 interface ContentGeneratorProps {
     onSelectDraft: (draft: { title: string; body: string; tags: string[] }) => void;
@@ -16,6 +17,13 @@ export default function ContentGenerator({ onSelectDraft }: ContentGeneratorProp
 
     const handleGenerate = async () => {
         if (!topic.trim()) return;
+
+        // Rate Limit Check (30 seconds cooldown)
+        const limit = checkRateLimit('blog_generator', 30);
+        if (!limit.allowed) {
+            setError(`⏳ Por favor espera ${limit.waitTime} segundos antes de generar otro borrador.`);
+            return;
+        }
 
         setLoading(true);
         setError(null);
