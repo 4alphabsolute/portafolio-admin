@@ -73,8 +73,8 @@ export default function BlogSection({ t, language = 'es' }: BlogSectionProps) {
             <button
               onClick={() => setActiveTab('articles')}
               className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'articles'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
                 }`}
             >
               {t?.blog?.tabs?.articles || 'Artículos'}
@@ -82,8 +82,8 @@ export default function BlogSection({ t, language = 'es' }: BlogSectionProps) {
             <button
               onClick={() => setActiveTab('analysis')}
               className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'analysis'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-white/50'
                 }`}
             >
               {t?.blog?.tabs?.analysis || 'Análisis de Mercado'}
@@ -102,7 +102,11 @@ export default function BlogSection({ t, language = 'es' }: BlogSectionProps) {
                   {t?.blog?.analysis?.subtitle || 'Seguimiento en tiempo real de los principales índices y activos financieros.'}
                 </p>
               </div>
-              <TradingViewWidget />
+              <TradingViewWidget
+                language={language}
+                title={t?.blog?.analysis?.title}
+                subtitle={t?.blog?.analysis?.subtitle}
+              />
             </div>
           </div>
         ) : (

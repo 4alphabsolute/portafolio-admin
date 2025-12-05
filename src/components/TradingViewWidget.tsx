@@ -1,6 +1,12 @@
 import { useEffect, useRef, memo } from 'react';
 
-function TradingViewWidget() {
+interface TradingViewWidgetProps {
+    language?: 'es' | 'en';
+    title?: string;
+    subtitle?: string;
+}
+
+function TradingViewWidget({ language = 'es', title, subtitle }: TradingViewWidgetProps) {
     const container = useRef<HTMLDivElement>(null);
     const tickerContainer = useRef<HTMLDivElement>(null);
 
@@ -24,7 +30,7 @@ function TradingViewWidget() {
                 "colorTheme": "light",
                 "isTransparent": true,
                 "displayMode": "adaptive",
-                "locale": "es"
+                "locale": language // Dynamic locale
             });
             tickerContainer.current.appendChild(scriptTicker);
         }
@@ -38,20 +44,20 @@ function TradingViewWidget() {
             scriptIdeas.async = true;
             scriptIdeas.innerHTML = JSON.stringify({
                 "width": "100%",
-                "height": 600, // Aumentado para mejor visibilidad
+                "height": 600,
                 "isTransparent": true,
                 "colorTheme": "light",
-                "locale": "es",
-                "username": "4alphabsolute", // Usuario correcto
+                "locale": language, // Dynamic locale
+                "username": "4alphabsolute",
                 "sort": "recent",
-                "time": "all", // Mostrar todo el historial por si acaso
+                "time": "all",
                 "showChart": true,
                 "headerColor": "rgba(0, 0, 0, 1)",
                 "borderColor": "#e0e3eb"
             });
             container.current.appendChild(scriptIdeas);
         }
-    }, []);
+    }, [language]); // Re-run when language changes
 
     return (
         <div className="w-full space-y-6">
@@ -63,11 +69,15 @@ function TradingViewWidget() {
             {/* Contenedor Principal de Ideas */}
             <div className="tradingview-widget-container w-full border border-gray-200 rounded-xl shadow-sm bg-white/50 backdrop-blur-sm overflow-hidden p-4">
                 <div className="text-center mb-6">
-                    <h4 className="text-xl font-bold text-gray-800">Análisis y Estrategias</h4>
+                    <h4 className="text-xl font-bold text-gray-800">{title || 'Análisis y Estrategias'}</h4>
                     <p className="text-gray-600">
-                        Publicaciones recientes de <a href="https://es.tradingview.com/u/4alphabsolute/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">@4alphabsolute</a>
+                        {subtitle || 'Publicaciones recientes de'} <a href="https://es.tradingview.com/u/4alphabsolute/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">@4alphabsolute</a>
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">(Si no ves la última idea, puede tardar unos minutos en actualizarse la caché de TradingView)</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                        {language === 'es'
+                            ? '(Si no ves la última idea, puede tardar unos minutos en actualizarse la caché de TradingView)'
+                            : '(If you don\'t see the latest idea, it may take a few minutes for TradingView cache to update)'}
+                    </p>
                 </div>
 
                 <div className="tradingview-widget-container__widget min-h-[500px]" ref={container}></div>
@@ -79,7 +89,7 @@ function TradingViewWidget() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center px-6 py-2 bg-[#2962FF] text-white rounded-full text-sm font-medium hover:bg-[#1E53E5] transition-colors shadow-md"
                     >
-                        Ver Perfil Completo en TradingView
+                        {language === 'es' ? 'Ver Perfil Completo en TradingView' : 'View Full Profile on TradingView'}
                         <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>

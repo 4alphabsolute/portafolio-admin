@@ -118,6 +118,14 @@ export const translations = {
       inDevelopment: 'En desarrollo',
       readTime: 'lectura',
       noPosts: 'No hay artículos publicados aún.',
+      tabs: {
+        articles: 'Artículos',
+        analysis: 'Análisis de Mercado'
+      },
+      analysis: {
+        title: 'Visión de Mercado',
+        subtitle: 'Seguimiento en tiempo real de los principales índices y activos financieros.'
+      },
       cta: {
         title: '¿Te interesa mi contenido técnico?',
         subtitle: 'Sígueme en LinkedIn para recibir mis artículos sobre análisis de datos y BI',
@@ -245,6 +253,14 @@ export const translations = {
       inDevelopment: 'In Development',
       readTime: 'read',
       noPosts: 'No articles published yet.',
+      tabs: {
+        articles: 'Articles',
+        analysis: 'Market Analysis'
+      },
+      analysis: {
+        title: 'Market Overview',
+        subtitle: 'Real-time tracking of major indices and financial assets.'
+      },
       cta: {
         title: 'Interested in my technical content?',
         subtitle: 'Follow me on LinkedIn to receive my articles on data analysis and BI',
