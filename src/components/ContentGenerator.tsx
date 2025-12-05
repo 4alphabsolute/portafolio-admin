@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { generateBlogContent, GeneratedContent } from '../services/gemini';
+import { marked } from 'marked';
 
 interface ContentGeneratorProps {
     onSelectDraft: (draft: { title: string; body: string; tags: string[] }) => void;
@@ -11,6 +12,7 @@ export default function ContentGenerator({ onSelectDraft }: ContentGeneratorProp
     const [loading, setLoading] = useState(false);
     const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<'edit' | 'preview'>('preview');
 
     const handleGenerate = async () => {
         if (!topic.trim()) return;
@@ -22,6 +24,7 @@ export default function ContentGenerator({ onSelectDraft }: ContentGeneratorProp
         try {
             const content = await generateBlogContent(topic, tone);
             setGeneratedContent(content);
+            setViewMode('preview'); // Show preview first to wow the user
         } catch (err: any) {
             const msg = err.message || 'Error desconocido';
             setError(`Error: ${msg}`);
@@ -29,6 +32,18 @@ export default function ContentGenerator({ onSelectDraft }: ContentGeneratorProp
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleUpdateContent = (newBody: string) => {
+        if (generatedContent) {
+            setGeneratedContent({ ...generatedContent, body: newBody });
+        }
+    };
+
+    const openUnsplash = () => {
+        if (!generatedContent) return;
+        const query = generatedContent.tags.slice(0, 2).join(' ') || topic;
+        window.open(`https://unsplash.com/s/photos/${encodeURIComponent(query)}`, '_blank');
     };
 
     return (
@@ -100,20 +115,51 @@ export default function ContentGenerator({ onSelectDraft }: ContentGeneratorProp
                 {/* Results Section */}
                 {generatedContent && (
                     <div className="mt-8 border-t pt-6 animate-fade-in">
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-semibold text-gray-900">Borrador Generado</h4>
-                            <button
-                                onClick={() => onSelectDraft(generatedContent)}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium flex items-center gap-2"
-                            >
-                                📝 Usar este Borrador
-                            </button>
+                        <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-gray-900">Borrador Generado</h4>
+                                <div className="flex bg-gray-100 rounded-lg p-1">
+                                    <button
+                                        onClick={() => setViewMode('edit')}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewMode === 'edit' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        ✏️ Editar
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('preview')}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${viewMode === 'preview' ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                                    >
+                                        👁️ Vista Previa
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={openUnsplash}
+                                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-2"
+                                    title="Buscar imagen en Unsplash"
+                                >
+                                    📷 Buscar Imagen
+                                </button>
+                                <button
+                                    onClick={() => onSelectDraft(generatedContent)}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium flex items-center gap-2"
+                                >
+                                    📝 Usar este Borrador
+                                </button>
+                            </div>
                         </div>
 
                         <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                             <div className="mb-4">
                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Título Sugerido</span>
-                                <h2 className="text-xl font-bold text-gray-900 mt-1">{generatedContent.title}</h2>
+                                <input
+                                    type="text"
+                                    value={generatedContent.title}
+                                    onChange={(e) => setGeneratedContent({ ...generatedContent, title: e.target.value })}
+                                    className="w-full text-xl font-bold text-gray-900 mt-1 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none"
+                                />
                             </div>
 
                             <div className="mb-4">
@@ -128,10 +174,20 @@ export default function ContentGenerator({ onSelectDraft }: ContentGeneratorProp
                             </div>
 
                             <div>
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Contenido</span>
-                                <div className="mt-2 prose prose-sm max-w-none text-gray-600 whitespace-pre-wrap font-mono text-xs bg-white p-4 rounded border">
-                                    {generatedContent.body}
-                                </div>
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Contenido</span>
+
+                                {viewMode === 'edit' ? (
+                                    <textarea
+                                        value={generatedContent.body}
+                                        onChange={(e) => handleUpdateContent(e.target.value)}
+                                        className="w-full h-96 p-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                    />
+                                ) : (
+                                    <div
+                                        className="prose prose-sm max-w-none bg-white p-6 rounded-lg border border-gray-200 min-h-[24rem]"
+                                        dangerouslySetInnerHTML={{ __html: marked(generatedContent.body) as string }}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
