@@ -9,6 +9,7 @@ export default function StructuredData({ page = 'home' }: StructuredDataProps) {
         "@context": "https://schema.org",
         "@type": "Person",
         "name": "Andrés Almeida",
+        "alternateName": ["Andrés Almeida Data Analyst", "Andrés Almeida BI", "Soy Andrés Almeida"],
         "jobTitle": "Data & Business Intelligence Analyst",
         "description": "Analista de Datos especializado en Power BI, SQL, R y análisis financiero con experiencia en banca y seguros",
         "url": "https://soyandresalmeida.com",
@@ -17,7 +18,9 @@ export default function StructuredData({ page = 'home' }: StructuredDataProps) {
         "image": "https://soyandresalmeida.com/images/perfil.png",
         "sameAs": [
             "https://linkedin.com/in/soyandresalmeida",
-            "https://github.com/4alphabsolute"
+            "https://github.com/4alphabsolute",
+            "https://www.instagram.com/soyandresalmeida/",
+            "https://twitter.com/andresalmeida"
         ],
         "address": {
             "@type": "PostalAddress",

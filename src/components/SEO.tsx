@@ -9,14 +9,14 @@ export default function SEO({ page = 'home', language = 'es' }: SEOProps) {
     const seoData = {
         home: {
             es: {
-                title: "Andrés Almeida | Analista de Datos & BI | Power BI, SQL, R | Madrid",
-                description: "Portfolio profesional de Andrés Almeida. Especialista en Power BI, SQL, R y análisis financiero. MBA EUDE + Máster BI. Experiencia en banca (Banesco) y seguros. Disponible en Madrid, España.",
-                keywords: "Andrés Almeida, Data Analyst Madrid, Power BI Expert Spain, SQL Analyst Madrid, Business Intelligence Madrid, Analista Datos España, BI Developer Madrid, Financial Analysis, Banesco, EUDE MBA, R Programming, DAX, Power Query, Data Science Madrid"
+                title: "Andrés Almeida | Analista de Datos & Business Intelligence | Madrid",
+                description: "Soy Andrés Almeida, Analista de Datos y Consultor BI en Madrid. NO soy el artista. Especialista en Power BI, SQL, R y Finanzas. Transformo datos en decisiones.",
+                keywords: "Andrés Almeida, Andrés Almeida Data Analyst, Andrés Almeida BI, Analista Datos Madrid, Power BI Expert Spain, SQL Analyst Madrid, Business Intelligence Madrid"
             },
             en: {
-                title: "Andrés Almeida | Data & BI Analyst | Power BI, SQL, R | Madrid",
-                description: "Professional portfolio of Andrés Almeida. Specialist in Power BI, SQL, R and financial analysis. MBA EUDE + BI Master. Experience in banking (Banesco) and insurance. Available in Madrid, Spain.",
-                keywords: "Andrés Almeida, Data Analyst Madrid, Power BI Expert, SQL Analyst, Business Intelligence Madrid, BI Developer Spain, Financial Analysis, R Programming, Python, DAX, Trading Analysis"
+                title: "Andrés Almeida | Data Analyst & Business Intelligence | Madrid",
+                description: "I am Andrés Almeida, Data Analyst & BI Consultant in Madrid. NOT the artist. Specialist in Power BI, SQL, R and Finance. I turn data into decisions.",
+                keywords: "Andrés Almeida, Andrés Almeida Data Analyst, Andrés Almeida BI, Data Analyst Madrid, Power BI Expert, SQL Analyst, Business Intelligence Madrid"
             }
         }
     };
