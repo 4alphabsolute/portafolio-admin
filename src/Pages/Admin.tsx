@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import BotAnalytics from '../components/BotAnalytics';
+import ContentGenerator from '../components/ContentGenerator';
 
 interface Certificate {
   id?: string;
@@ -88,6 +89,17 @@ export default function Admin() {
   const [caseForm, setCaseForm] = useState<CaseStudy>({ title: '', client: '', industry: '', challenge: '', solution: '', results: '', technologies: [], duration: '' });
   const [blogForm, setBlogForm] = useState<BlogPost>({ title: '', excerpt: '', date: '', readTime: '', category: '', status: 'published', imageUrl: '', linkedinUrl: '' });
   const [uploading, setUploading] = useState(false);
+
+  const handleDraftSelection = (draft: { title: string; body: string; tags: string[] }) => {
+    setBlogForm({
+      ...blogForm,
+      title: draft.title,
+      excerpt: draft.body.substring(0, 200) + '...',
+      category: draft.tags[0] || 'General',
+    });
+    setActiveTab('blog');
+    alert('✅ Datos aplicados al formulario.\n\nNota: Tu blog usa enlaces externos. Copia el contenido completo del generador para publicarlo en LinkedIn, y luego pega aquí la URL.');
+  };
 
   // Edit states
   const [editingCert, setEditingCert] = useState<string | null>(null);
@@ -307,6 +319,7 @@ export default function Admin() {
                 { id: 'experiences', name: 'Experiencia', icon: '💼' },
                 { id: 'cases', name: 'Casos de Estudio', icon: '📊' },
                 { id: 'blog', name: 'Blog', icon: '✍️' },
+                { id: 'generator', name: 'Generador IA', icon: '✨' },
                 { id: 'bot', name: 'Bot Analytics', icon: '🤖' },
                 { id: 'debug', name: 'Database Status', icon: '🔍' },
                 { id: 'system', name: 'Sistema', icon: '⚙️' }
@@ -743,6 +756,13 @@ export default function Admin() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Content Generator Tab */}
+        {activeTab === 'generator' && (
+          <div className="max-w-4xl mx-auto">
+            <ContentGenerator onSelectDraft={handleDraftSelection} />
           </div>
         )}
 
