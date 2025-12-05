@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 
-export default function LinkedInBadge() {
+interface LinkedInBadgeProps {
+    language?: 'es' | 'en';
+}
+
+export default function LinkedInBadge({ language = 'es' }: LinkedInBadgeProps) {
     useEffect(() => {
         const script = document.createElement('script');
         script.src = 'https://platform.linkedin.com/badges/js/profile.js';
@@ -18,7 +22,7 @@ export default function LinkedInBadge() {
         <div className="flex justify-center my-6">
             <div
                 className="badge-base LI-profile-badge"
-                data-locale="es_ES"
+                data-locale={language === 'es' ? 'es_ES' : 'en_US'}
                 data-size="large"
                 data-theme="light"
                 data-type="HORIZONTAL"
@@ -27,7 +31,7 @@ export default function LinkedInBadge() {
             >
                 <a
                     className="badge-base__link LI-simple-link"
-                    href="https://es.linkedin.com/in/soyandresalmeida?trk=profile-badge"
+                    href={`https://${language === 'es' ? 'es' : 'www'}.linkedin.com/in/soyandresalmeida?trk=profile-badge`}
                 >
                     Andrés Almeida
                 </a>

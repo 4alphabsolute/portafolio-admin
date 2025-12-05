@@ -217,7 +217,7 @@ export default function UnifiedContactSection({ language = 'es' }: UnifiedContac
 
               {/* LinkedIn Badge */}
               <div className="mt-8">
-                <LinkedInBadge />
+                <LinkedInBadge language={language} />
               </div>
             </div>
 
