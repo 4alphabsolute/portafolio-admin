@@ -17,10 +17,10 @@ export default function StructuredData({ page = 'home' }: StructuredDataProps) {
         "telephone": "+34633084828",
         "image": "https://soyandresalmeida.com/images/perfil.png",
         "sameAs": [
-            "https://linkedin.com/in/soyandresalmeida",
+            "https://www.linkedin.com/in/soyandresalmeida",
             "https://github.com/4alphabsolute",
             "https://www.instagram.com/soyandresalmeida/",
-            "https://twitter.com/andresalmeida"
+            "https://www.facebook.com/andres.almeida.90/"
         ],
         "address": {
             "@type": "PostalAddress",
