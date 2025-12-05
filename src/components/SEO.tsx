@@ -6,7 +6,10 @@ interface SEOProps {
 }
 
 export default function SEO({ page = 'home', language = 'es' }: SEOProps) {
-    const seoData = {
+    const seoData: Partial<Record<NonNullable<SEOProps['page']>, {
+        es: { title: string; description: string; keywords: string; };
+        en: { title: string; description: string; keywords: string; };
+    }>> = {
         home: {
             es: {
                 title: "Andrés Almeida | Analista de Datos & Business Intelligence | Madrid",
@@ -23,7 +26,7 @@ export default function SEO({ page = 'home', language = 'es' }: SEOProps) {
 
     const locale = language === 'es' ? 'es_ES' : 'en_US';
     const alternateLang = language === 'es' ? 'en_US' : 'es_ES';
-    const data = seoData[page]?.[language] || seoData.home[language];
+    const data = seoData[page]?.[language] || seoData.home![language];
     const canonicalUrl = "https://soyandresalmeida.com";
     const socialImage = "https://soyandresalmeida.com/images/perfil.png";
 
