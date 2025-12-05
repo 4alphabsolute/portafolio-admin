@@ -22,8 +22,9 @@ export default function ContentGenerator({ onSelectDraft }: ContentGeneratorProp
         try {
             const content = await generateBlogContent(topic, tone);
             setGeneratedContent(content);
-        } catch (err) {
-            setError('Error al generar contenido. Verifica tu API Key o intenta de nuevo.');
+        } catch (err: any) {
+            const msg = err.message || 'Error desconocido';
+            setError(`Error: ${msg}`);
             console.error(err);
         } finally {
             setLoading(false);
@@ -91,7 +92,7 @@ export default function ContentGenerator({ onSelectDraft }: ContentGeneratorProp
                 </button>
 
                 {error && (
-                    <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm">
+                    <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm font-mono break-all">
                         {error}
                     </div>
                 )}

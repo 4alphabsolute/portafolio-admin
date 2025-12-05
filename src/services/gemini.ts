@@ -44,8 +44,12 @@ export const generateBlogContent = async (topic: string, tone: 'professional' | 
         const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
         return JSON.parse(cleanText);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating content with Gemini:", error);
-        throw new Error("Failed to generate content. Please check your API key and try again.");
+        // Log key status for debugging (safe log)
+        console.log("API Key Status:", API_KEY ? `Present (starts with ${API_KEY.substring(0, 4)}...)` : "Missing");
+
+        const originalMessage = error?.message || error?.toString() || "Unknown error";
+        throw new Error(`Gemini API Error: ${originalMessage}`);
     }
 };
