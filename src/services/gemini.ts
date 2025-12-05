@@ -18,7 +18,7 @@ export interface GeneratedContent {
 
 export const generateBlogContent = async (topic: string, tone: 'professional' | 'casual' | 'technical' = 'professional'): Promise<GeneratedContent> => {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
         const prompt = `
       Act as an expert technical content writer. Write a blog post about: "${topic}".
