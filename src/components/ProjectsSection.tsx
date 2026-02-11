@@ -147,9 +147,9 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
                         {t?.projects?.viewLive || 'Ver Proyecto'}
                       </a>
                     )}
-                    {(project.github || project.githubUrl) && (
+                    {(project.githubUrl || project.github) && (
                       <a
-                        href={project.github || project.githubUrl}
+                        href={project.githubUrl || project.github}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`${(project.url || project.liveUrl) ? 'flex-1' : 'w-full'} bg-gray-800 text-white text-center py-2 px-4 rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium`}

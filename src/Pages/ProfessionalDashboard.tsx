@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 interface Mensaje {
@@ -43,11 +43,12 @@ export default function ProfessionalDashboard() {
   });
 
   useEffect(() => {
-    const isAuth = localStorage.getItem('adminAuth') === 'true';
-    if (isAuth) {
-      setUser({ displayName: 'Andrés Almeida', email: 'soyandresalmeida@gmail.com' });
-    } else {
-      window.location.href = '/login';
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUser({
+        displayName: currentUser.displayName || 'Admin',
+        email: currentUser.email
+      });
     }
   }, []);
 
@@ -182,8 +183,8 @@ export default function ProfessionalDashboard() {
     });
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminAuth');
+  const handleLogout = async () => {
+    await auth.signOut();
     window.location.href = '/login';
   };
 

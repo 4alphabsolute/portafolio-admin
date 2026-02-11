@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import BotAnalytics from '../components/BotAnalytics';
 import ContentGenerator from '../components/ContentGenerator';
 
@@ -114,11 +114,13 @@ export default function Admin() {
   const [debugError, setDebugError] = useState<string | null>(null);
 
   useEffect(() => {
-    const isAuth = localStorage.getItem('adminAuth') === 'true';
-    if (isAuth) {
-      setUser({ displayName: 'Admin', email: 'admin@portafolio.com' });
-    } else {
-      window.location.href = '/login';
+    // Auth is now handled by PrivateRoute
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUser({
+        displayName: currentUser.displayName || 'Admin',
+        email: currentUser.email
+      });
     }
   }, []);
 
