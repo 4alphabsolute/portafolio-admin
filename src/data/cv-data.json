@@ -5,7 +5,7 @@
     "email": "soyandresalmeida@gmail.com",
     "phone": "(+34) 633-084828",
     "location": "Madrid",
-    "summary": "Analista de Datos y Negocio con base financiera y experiencia en banca y seguros. Especializado en estructurar información compleja, mejorar la calidad del dato y elaborar reportes ejecutivos para comités. Combino BI, análisis financiero y automatización con una visión estratégica orientada a la toma de decisiones. Experiencia con Power BI, SQL, R y procesos reproducibles para diagnóstico, integración y limpieza de datos."
+    "summary": "En un mundo de especialistas, yo elijo ser el puente. Como Economista, entiendo el ROI y la estrategia. Como Analista, encuentro la verdad en los datos. Y como Developer, construyo las herramientas para solucionar los problemas que encuentro. Mi enfoque es híbrido: combino la visión de negocio con la capacidad técnica (Python, SQL, React) para crear soluciones que generen valor real."
   },
   "experience": [
     {
@@ -85,17 +85,30 @@
   "projects": [
     {
       "id": 1,
-      "name": "Mi Portafolio",
-      "description": "Portafolio personal con chatbot integrado usando Flowise y Gemini",
+      "name": "Ecosistema ALTAIR & CRM",
+      "description": "Plataforma integral (CRM + Portfolio) desarrollada desde cero con React y Firebase. Actúa como mi propio 'Salesforce' personal, gestionando leads, analizando tráfico en tiempo real con IA (Gemini) y automatizando el seguimiento de oportunidades comerciales.",
       "technologies": [
         "React",
         "TypeScript",
-        "Tailwind",
-        "Firebase",
-        "Flowise"
+        "Gemini API",
+        "Supabase",
+        "CRM"
       ],
       "url": "https://soyandresalmeida.com",
-      "github": "https://github.com/usuario/miportafolio"
+      "github": "https://github.com/4alphabsolute/miportafolio"
+    },
+    {
+      "id": 2,
+      "name": "Analítica de Mercados",
+      "description": "Sistema de inteligencia de mercado que monitorea indicadores macroeconómicos y financieros en tiempo real. Utiliza scripts en Python y PineScript para detectar tendencias y generar alertas estratégicas para la toma de decisiones de inversión.",
+      "technologies": [
+        "PineScript",
+        "TradingView",
+        "Python",
+        "Finance"
+      ],
+      "url": "",
+      "github": ""
     }
   ],
   "certifications": [

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { marked } from 'marked';
+
 import cvProfiles from '../data/cv-profiles.json';
 import personalityConfig from '../data/personality-config.json';
 
@@ -179,7 +179,7 @@ export default function AndyChat() {
       if (matches >= 2) return key;
     }
 
-    return 'MASTER'; // Default
+    return 'DATA'; // Default changed to DATA as it's the more central one now
   };
 
   // Generar PDF dinámico
@@ -194,7 +194,7 @@ export default function AndyChat() {
       // Agregar mensaje del bot confirmando la descarga
       const confirmMessage = userProfile.language === 'en' ?
         `Perfect! I've generated your personalized CV for the "${profile.title}" profile. The PDF file has been downloaded automatically.\n\nWould you like me to adjust something specific or generate another profile?` :
-        `¡Perfecto! He generado tu CV personalizado para el perfil "${profile.title}". El archivo PDF se ha descargado automáticamente.\n\n¿Te gustaría que ajuste algo específico o genere otro perfil?`;
+        `¡Perfecto! He generado tu CV personalizado para el perfil "${profile.title_es || profile.title}". El archivo PDF se ha descargado automáticamente.\n\n¿Te gustaría que ajuste algo específico o genere otro perfil?`;
 
       setMessages(m => [...m, {
         from: 'bot',
@@ -226,8 +226,11 @@ export default function AndyChat() {
     setSending(true);
 
     try {
-      const genAI = new GoogleGenerativeAI('AIzaSyDBcGIh9f7ehSZDZyct9e9b4JqaqqmACV0');
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error('Gemini API Key not found');
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       // Sistema anti-troll
       const trollCheck = checkForTroll(question, userProfile);
@@ -267,11 +270,24 @@ export default function AndyChat() {
       // Generar pregunta proactiva
       const proactiveQuestion = generateProactiveQuestion(detectedProfile.type, detectedProfile.language);
 
+      // Detectar intención explícita de descarga
+      const lowerQuestion = question.toLowerCase();
+      const isDownloadIntent =
+        (lowerQuestion.includes('cv') || lowerQuestion.includes('currículum') || lowerQuestion.includes('pdf')) &&
+        (lowerQuestion.includes('dame') || lowerQuestion.includes('quiero') || lowerQuestion.includes('bajar') || lowerQuestion.includes('descargar') || lowerQuestion.includes('generar') || lowerQuestion.includes('si') || lowerQuestion.includes('sí') || lowerQuestion.includes('yes') || lowerQuestion.includes('please'));
+
+      if (isDownloadIntent && detectedProfile.type !== 'unknown') {
+        setUserProfile(prev => ({ ...prev, type: detectedProfile.type })); // Forzar el tipo detectado
+        await generateDynamicCV(suggestedCV);
+        setSending(false);
+        return;
+      }
+
       let contextualPrompt = '';
       if (detectedProfile.type === 'recruiter') {
         contextualPrompt = detectedProfile.language === 'en' ?
-          `\n\nNOTE: I detected you're a recruiter. I can generate a specific CV for your search. ${proactiveQuestion}` :
-          `\n\nNOTA: Detecté que eres un reclutador. ${proactiveQuestion}`;
+          `\n\nNOTE: I detected you're a recruiter. ERES DIRECTO. Si piden CV, DÁSELO. NO PREGUNTES MÁS. SI EL USUARIO DICE "SI", GENERA EL PDF. ${proactiveQuestion}` :
+          `\n\nNOTA: Detecté que eres un reclutador. ERES DIRECTO. Si piden CV, DÁSELO. NO PREGUNTES MÁS. SI EL USUARIO DICE "SI", GENERA EL PDF.`;
       } else if (detectedProfile.type === 'technical') {
         contextualPrompt = detectedProfile.language === 'en' ?
           `\n\nNOTE: I see you have technical interest. ${proactiveQuestion}` :
@@ -281,61 +297,92 @@ export default function AndyChat() {
         contextualPrompt = `\n\nPREGUNTA PROACTIVA: ${proactiveQuestion}`;
       }
 
+      const antiHallucinationRules = detectedProfile.language === 'en' ?
+        `\n\nCRITICAL ANTI-HALLUCINATION RULES:
+      1. REALITY CHECK: You are based strictly on Andrés Almeida's real profile (Business Intelligence, Data Analyst, MBA Student at EUDE, Banesco Seguros experience).
+      2. DO NOT INVENT: Do NOT say he worked at NASA, Google, Harvard, or companies not mentioned. 
+      3. ADMIT IGNORANCE: If asked about a specific detail you don't know (e.g. "What year did he finish high school?"), simply say: "I don't have that specific detail handy, but it's likely in his full CV. Would you like to generate it?"
+      4. STAY GROUNDED: Your purpose is to bridge the user to the CV, not to be a storyteller.
+      5. ACTION OVER TALK: If the user says "YES" or asks for the CV, assume they want it NOW. Do not ask "Do you want it?" again.` :
+        `\n\nREGLAS CRÍTICAS ANTI-ALUCINACIÓN:
+      1. REALIDAD: Estás basado estrictamente en el perfil real de Andrés Almeida (Business Intelligence, Analista de Datos, MBA en EUDE, experiencia en Banesco Seguros).
+      2. NO INVENTES: NO digas que trabajó en la NASA, Google, Harvard, ni ninguna empresa que no esté en tu contexto.
+      3. ADMITE IGNORANCIA: Si te preguntan un detalle específico que no sabes (ej. "¿En qué año terminó el bachillerato?"), di simplemente: "No tengo ese dato específico a mano, pero seguro está en su CV completo. ¿Quieres que lo genere?"
+      4. MANTENTE EN TIERRA: Tu propósito es llevar al usuario al CV, no inventar historias.
+      5. ACCIÓN SOBRE CHARLA: Si el usuario dice "SÍ" o pide el CV, asume que lo quiere YA. No preguntes "¿Lo quieres?" de nuevo. CONFIRMA LA ACCIÓN.`;
+
       const basePrompt = detectedProfile.language === 'en' ?
-        `You are Andrés Almeida responding in first person as an experienced professional.
+        `SYSTEM PROMPT: ANDYCHAT (V8.0 - THE CHAMELEON STRATEGY)
+        ${antiHallucinationRules}
+        
+        ROLE:
+        You are AndyChat, Andrés Almeida's advanced virtual assistant. You are a "Career Architect" and "Intelligent Lead Magnet". Your goal is to qualify the visitor and guide them to the Andrés profile that best solves their need.
 
-MY COMPLETE PROFILE:
-- Data and Business Analyst specialized in banking and insurance
-- Banesco Seguros: Actuarial reports automation in R, Power BI dashboards
-- Banesco Banco: Credit risk analysis, EBITDA, cash flows
-- MBA EUDE Business School (ongoing) + BI Master completed
-- Skills: Power BI (DAX), R (tidyverse), SQL (Oracle), Python, financial analysis
-- Madrid, Spain | soyandresalmeida@gmail.com
-- Web: https://soyandresalmeida.com
+        YOUR CORE KNOWLEDGE (THE MODULAR STRATEGY):
+        Andrés is a hybrid profile. Detect what the user is looking for and activate one of these 5 modes:
+        
+        1. DATA (Technical Analyst): If looking for SQL, ETL, Power BI. Hook: "Andrés reduces operational times by 60% automating data. Want to see his Python/SQL code?"
+        2. FINTECH (Consultant / Strategist): If looking for Banking, Business, Product Owner. Hook: "He has an MBA and knows how to code. The perfect bridge between Business and IT."
+        3. BUILDER (AI Engineer / Dev): If looking for React, Apps, Startups, AI. Hook: "Andrés builds real products (like me, this bot). Check out his Supabase and React architecture."
+        4. FINANCE (Traditional Banking): If looking for Risk, Audit. Hook: "Analytical and financial rigor. Expert in balance sheet analysis and banking regulations."
+        5. SALES (Real Estate / Commercial): If looking for Sales, Customer Service. Hook: "Commercial empathy + Data management. Optimizes occupancy and closes sales with strategy."
 
-PERSONALITY: ${personalityConfig.personality.communication_style}
-STRENGTHS: ${personalityConfig.personality.strengths.join(', ')}
+        TONE: Professional but approachable (B2B Friendly), Tech-savvy, Direct.
+        
+        INTERACTION RULES:
+        1. Discovery Phase: If it's the start, ask: "${proactiveQuestion}"
+        2. Selling Phase: Highlight ONLY relevant achievements for the detected interest.
+        3. Call to Action (CTA): Guide them to download the specific PDF. "I have a specific CV for [Detected Profile]. Shall I generate it now?"
 
-USER CONTEXT:
-- Detected type: ${detectedProfile.type}
-- Suggested profile: ${suggestedCV}
-- Language: English
+        TECHNICAL KNOWLEDGE:
+        You run on React 18, Vite, Firebase, Gemini 2.0 Flash. Show off that Andrés knows how to build modern software.
 
-RESPOND AS ME with specific technical examples. If recruiter, be direct about results and achievements. If asking about CV or downloads, mention I can generate a personalized CV.
+        USER CONTEXT:
+        - Detected type: ${detectedProfile.type}
+        - Suggested profile: ${suggestedCV}
+        - Language: English
 
-Question: ${question}` :
-        `Eres Andrés Almeida respondiendo en primera persona como un profesional experimentado.
+        Question: ${question}` :
+        `SYSTEM PROMPT: ANDYCHAT (V8.0 - LA ESTRATEGIA CAMALEÓN)
+        ${antiHallucinationRules}
+        
+        ROL:
+        Eres AndyChat, el asistente virtual avanzado de Andrés Almeida. Eres un "Arquitecto de Carreras" y un "Lead Magnet Inteligente". Tu objetivo es cualificar al visitante y guiarlo hacia el perfil de Andrés que mejor resuelva su necesidad.
 
-MI PERFIL COMPLETO:
-- Analista de Datos y Negocio especializado en banca y seguros
-- Banesco Seguros: Automatización reportes actuariales en R, dashboards Power BI
-- Banesco Banco: Análisis riesgo crediticio, EBITDA, flujos de caja
-- MBA EUDE Business School (cursando) + Máster BI completado
-- Skills: Power BI (DAX), R (tidyverse), SQL (Oracle), Python, análisis financiero
-- Madrid, España | soyandresalmeida@gmail.com
-- Web: https://soyandresalmeida.com
+        TU CONOCIMIENTO CENTRAL (LA ESTRATEGIA MODULAR):
+        Andrés es un perfil híbrido. Detecta qué busca el usuario y activa uno de los 5 modos:
+        
+        1. DATA (Analista Técnico): Si buscan SQL, ETL, Power BI. Gancho: "Andrés reduce tiempos operativos un 60% automatizando datos. ¿Quieres ver su código Python/SQL?"
+        2. FINTECH (Consultor / Estratega): Si buscan Banca, Negocio, Product Owner. Gancho: "Tiene MBA y sabe programar. El puente perfecto entre Negocio y TI."
+        3. BUILDER (Ingeniero IA / Dev): Si buscan React, Apps, Startups, IA. Gancho: "Andrés construye productos reales (como yo, este bot). Mira su arquitectura en Supabase y React."
+        4. FINANCE (Banca Tradicional): Si buscan Riesgos, Auditoría. Gancho: "Rigor analítico y financiero. Experto en análisis de balances y normativa bancaria."
+        5. SALES (Real Estate / Comercial): Si buscan Ventas, Atención al Cliente. Gancho: "Empatía comercial + Gestión de datos. Optimiza la ocupación y cierra ventas con estrategia."
 
-PERSONALIDAD: ${personalityConfig.personality.communication_style}
-FORTALEZAS: ${personalityConfig.personality.strengths.join(', ')}
-DEBILIDADES: ${personalityConfig.personality.weaknesses.join(', ')}
+        TONO: Profesional pero cercano (B2B Friendly), Tech-savvy, Directo.
+        
+        REGLAS DE INTERACCIÓN:
+        1. Fase de Descubrimiento: Si es el inicio, pregunta: "${proactiveQuestion}"
+        2. Fase de Venta: Destaca SOLO los logros relevantes para el interés detectado.
+        3. Call to Action (CTA): Llévalos a descargar el PDF específico. "Tengo un CV específico para [Perfil detectado]. ¿Te lo genero ahora?"
 
-CONTEXTO DEL USUARIO:
-- Tipo detectado: ${detectedProfile.type}
-- Perfil sugerido: ${suggestedCV}
-- Idioma: Español
+        CONOCIMIENTO TÉCNICO:
+        Funcionas con React 18, Vite, Firebase, Gemini 2.0 Flash. Presume de ello. Demuestra que Andrés sabe construir software moderno.
 
-RESPONDE COMO YO con ejemplos técnicos específicos. Si es un reclutador, sé más directo sobre resultados y logros. Si preguntan sobre CV o descargas, menciona que puedo generar un CV personalizado.
+        CONTEXTO DEL USUARIO:
+        - Tipo detectado: ${detectedProfile.type}
+        - Perfil sugerido: ${suggestedCV}
+        - Idioma: Español
 
-Pregunta: ${question}`;
+        Pregunta: ${question}`;
 
-      const prompt = basePrompt + contextualPrompt;
+      const prompt = (basePrompt + contextualPrompt).replace(/^\s+/gm, '');
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
 
       setMessages((m) => [...m, { from: 'bot', text }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Gemini error:', error);
       setMessages((m) => [...m, {
         from: 'bot',
@@ -380,136 +427,157 @@ Pregunta: ${question}`;
       </div>
 
       {open && (
-        <div className="fixed bottom-20 right-6 w-96 max-w-[calc(100vw-3rem)] h-[500px] max-h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-200">
+        <div className="fixed bottom-24 right-6 w-96 sm:w-[500px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[70vh] bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-100 ring-1 ring-black/5 font-sans">
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#0A66C2] to-[#0052A3] p-4 text-white">
+          <div className="bg-white border-b border-gray-100 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                🤖
+              <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-full flex items-center justify-center shadow-lg text-white">
+                <span className="text-xl">🤖</span>
               </div>
               <div>
-                <h3 className="font-semibold">AndyBot</h3>
-                <p className="text-xs opacity-90">Asistente de Andrés Almeida</p>
+                <h3 className="font-bold text-gray-900 leading-tight">AndyBot</h3>
+                <p className="text-xs text-blue-600 font-medium">Asistente IA • En línea</p>
               </div>
+              <button
+                onClick={() => setOpen(false)}
+                className="ml-auto text-gray-400 hover:text-gray-600 transition-colors p-1"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 p-4 overflow-auto space-y-3 bg-gray-50">
+          <div
+            ref={scrollRef}
+            className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50/50 scroll-smooth"
+          >
             {messages.length === 0 && (
-              <div className="text-center text-gray-500 mt-8">
-                <div className="text-4xl mb-2">💼</div>
-                <p className="font-medium">¡Hola! Soy AndyBot</p>
-                <p className="text-sm">Pregúntame sobre la experiencia,</p>
-                <p className="text-sm">habilidades y proyectos de Andrés</p>
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-4 p-4">
+                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner mb-2">
+                  👋
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900 text-lg">¡Hola! Soy AndyBot</h4>
+                  <p className="text-sm text-gray-500 max-w-[250px] mx-auto mt-1 leading-relaxed">
+                    Pregúntame sobre la experiencia, habilidades y proyectos de Andrés.
+                  </p>
+                </div>
 
                 {/* Botones de CV rápido */}
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs font-medium text-gray-600">CV Personalizado:</p>
-                  <div className="flex flex-wrap gap-1 justify-center">
+                <div className="w-full max-w-xs space-y-3 pt-4 border-t border-gray-100">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Generar CV Personalizado</p>
+                  <div className="flex flex-wrap justify-center gap-2">
                     {Object.entries(cvProfiles.profiles).map(([key, profile]) => (
                       <button
                         key={key}
                         onClick={() => generateDynamicCV(key)}
-                        className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors"
+                        className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all duration-200 shadow-sm"
                         title={profile.description}
                       >
-                        {key === 'MASTER' ? 'Analista Híbrido' :
-                          key === 'BI' ? 'Analista BI' :
-                            key === 'DATA' ? 'Analista de Datos' :
-                              key === 'FINANZAS' ? 'Analista Financiero' :
-                                'Consultor Digital'}
+                        {key === 'DATA' ? '📊 Datos' :
+                          key === 'FINTECH' ? '💳 Fintech' :
+                            key === 'BUILDER' ? '🛠️ Dev AI' :
+                              key === 'FINANCE' ? '📈 Finanzas' :
+                                '💼 Ventas'}
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
             )}
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-2xl shadow-sm ${m.from === 'user'
-                  ? 'bg-[#0A66C2] text-white rounded-br-md'
-                  : 'bg-white text-gray-800 rounded-bl-md border'
-                  }`}>
-                  <div
-                    className={`text-sm leading-relaxed prose prose-sm max-w-none ${m.from === 'user' ? 'prose-invert' : 'prose-gray'
-                      }`}
-                    dangerouslySetInnerHTML={{
-                      __html: marked(m.text, {
-                        breaks: true,
-                        gfm: true
-                      }) as string
-                    }}
-                  />
 
-                  {/* Mostrar botón de CV si el bot sugiere descarga */}
-                  {m.from === 'bot' && (m.text.toLowerCase().includes('cv') || m.text.toLowerCase().includes('currículum')) && (
-                    <div className="mt-2 pt-2 border-t border-gray-100">
-                      <p className="text-xs text-gray-500 mb-1">Generar CV personalizado:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {Object.entries(cvProfiles.profiles).slice(0, 3).map(([key, _]) => (
-                          <button
-                            key={key}
-                            onClick={() => generateDynamicCV(key)}
-                            className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
-                          >
-                            {key === 'MASTER' ? 'Híbrido' :
-                              key === 'BI' ? 'BI' :
-                                key === 'DATA' ? 'Datos' :
-                                  key === 'FINANZAS' ? 'Financiero' :
-                                    'Consultor'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`flex w-full ${m.from === 'user' ? 'justify-end' : 'justify-start'} animate-slideIn`}
+              >
+                <div
+                  className={`max-w-[85%] p-3.5 rounded-2xl shadow-sm text-sm leading-relaxed ${m.from === 'user'
+                    ? 'bg-blue-600 text-white rounded-tr-none'
+                    : 'bg-white text-gray-900 border border-gray-100 rounded-tl-none font-medium'
+                    }`}
+                >
+                  {/* Markdown simplificado para el bot */}
+                  {m.from === 'bot' ? (
+                    <div className="prose prose-sm prose-blue max-w-none dark:prose-invert text-gray-900" dangerouslySetInnerHTML={{
+                      __html:
+                        m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/\n/g, '<br/>')
+                    }} />
+                  ) : (
+                    <p className="break-words whitespace-pre-wrap">{m.text}</p>
                   )}
-                  <div className={`text-xs mt-1 opacity-70 ${m.from === 'user' ? 'text-blue-100' : 'text-gray-500'
-                    }`}>
-                    {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                  <div className={`text-[10px] mt-1 text-right font-medium ${m.from === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
             ))}
+
             {sending && (
-              <div className="flex justify-start">
-                <div className="bg-white p-3 rounded-2xl rounded-bl-md border shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                    <span className="text-xs text-gray-500">AndyBot está escribiendo...</span>
+              <div className="flex justify-start animate-pulse">
+                <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
+                  <span className="text-xs text-gray-400 font-medium">Escribiendo...</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Input */}
-          <div className="p-4 bg-white border-t">
-            <div className="flex gap-2">
+          {/* Contextual Action Bar */}
+          {userProfile.type !== 'unknown' && !sending && (
+            <div className="bg-blue-50 border-t border-blue-100 p-2 px-4 flex justify-between items-center animate-slideIn">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-blue-700">
+                  🎯 Perfil Detectado: {userProfile.type === 'recruiter' ? 'Reclutador' : userProfile.type === 'technical' ? 'Técnico' : 'General'}
+                </span>
+              </div>
+              <button
+                onClick={() => generateDynamicCV(suggestCVProfile(conversationContext))}
+                className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Descargar CV
+              </button>
+            </div>
+          )}
+
+          {/* Input Area */}
+          <div className="p-4 bg-white border-t border-gray-100">
+            <div className="flex gap-2 items-end">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !sending && send()}
+                onKeyDown={(e) => e.key === 'Enter' && !sending && send()}
                 placeholder="Escribe tu mensaje..."
-                className="flex-1 border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0A66C2] focus:border-transparent"
+                className="flex-1 bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                 disabled={sending}
               />
               <button
                 onClick={send}
-                className="bg-[#0A66C2] text-white p-3 rounded-xl hover:bg-[#0052A3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                 disabled={sending || !input.trim()}
               >
                 {sending ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 )}
               </button>
+            </div>
+            <div className="text-center mt-2">
+              <p className="text-[10px] text-gray-300">Powered by Google Gemini 2.5</p>
             </div>
           </div>
         </div>

@@ -18,14 +18,16 @@ export const initializeFirebaseData = async () => {
     if (certsSnapshot.empty && expSnapshot.empty && projectsSnapshot.empty) {
       console.log('📦 Migrando datos desde JSON...');
       await migrateFromJSON();
-    }
 
-    // 3. Marcar como inicializado
-    await setDoc(doc(db, 'system', 'initialized'), {
-      completed: true,
-      timestamp: new Date(),
-      version: '2.0'
-    });
+      // 3. Marcar como inicializado (SOLO SI SE HIZO LA MIGRACIÓN)
+      await setDoc(doc(db, 'system', 'initialized'), {
+        completed: true,
+        timestamp: new Date(),
+        version: '2.0'
+      });
+    } else {
+      console.log('✅ Firebase ya tiene datos (Saltando inicialización)');
+    }
 
     console.log('✅ Firebase inicializado correctamente');
     return true;

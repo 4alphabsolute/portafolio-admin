@@ -9,15 +9,15 @@ export const translations = {
     },
     hero: {
       title: 'Analista de Datos | Economista | BI & Big Data',
-      tagline: 'Transformo datos en decisiones estratégicas',
+      tagline: 'El puente entre los Datos de Negocio y las Decisiones Estratégicas',
       downloadCV: 'Ver Dossier',
     },
     about: {
       title: 'Sobre mí',
       description:
-        'Analista de Datos y Negocio con base financiera y experiencia en banca y seguros. Especializado en estructurar información compleja, mejorar la calidad del dato y elaborar reportes ejecutivos para comités. Combino Business Intelligence, análisis financiero y automatización con una visión estratégica orientada a la toma de decisiones.',
+        'En un mundo de especialistas, yo elijo ser el puente. Como Economista, entiendo el ROI y la estrategia. Como Analista, encuentro la verdad en los datos. Y como Developer, construyo las herramientas para solucionar los problemas que encuentro.',
       education:
-        'Actualmente curso un MBA en EUDE Business School, complementando mi Máster completado en Business Intelligence y Big Data Analytics. Mi experiencia práctica con Power BI, SQL, R y procesos reproducibles para diagnóstico, integración y limpieza de datos me permite transformar datos complejos en insights accionables para la alta dirección.',
+        'Actualmente curso un MBA en EUDE Business School, sumado a mi Máster en Business Intelligence. Mi enfoque es híbrido: combino la visión de negocio con la capacidad técnica (Python, SQL, React) para crear soluciones que no solo funcionan, sino que generan valor real.',
     },
     experience: {
       title: 'Experiencia Profesional',
@@ -144,15 +144,15 @@ export const translations = {
     },
     hero: {
       title: 'Data Analyst | Economist | BI & Big Data',
-      tagline: 'Turning data into strategic decisions',
+      tagline: 'The Bridge between Business Data and Strategic Decisions',
       downloadCV: 'View Dossier',
     },
     about: {
       title: 'About Me',
       description:
-        'Data and Business Analyst with financial background and experience in banking and insurance. Specialized in structuring complex information, improving data quality, and developing executive reports for committees. I combine Business Intelligence, financial analysis, and automation with a strategic vision focused on decision-making.',
+        'In a world of specialists, I choose to be the bridge. As an Economist, I understand ROI and strategy. As an Analyst, I find the truth in data. And as a Developer, I build the tools to solve the problems I find.',
       education:
-        "Currently pursuing an MBA at EUDE Business School, complementing my completed Master's in Business Intelligence and Big Data Analytics. My hands-on experience with Power BI, SQL, R, and reproducible processes for diagnosis, integration, and data cleansing allows me to transform complex data into actionable insights for senior management.",
+        'Currently pursuing an MBA at EUDE Business School, adding to my Master in Business Intelligence. My approach is hybrid: combining business vision with technical capability (Python, SQL, React) to create solutions that not only work but generate real value.',
     },
     experience: {
       title: 'Professional Experience',
