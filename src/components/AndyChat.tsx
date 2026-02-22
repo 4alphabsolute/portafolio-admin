@@ -274,34 +274,36 @@ export default function AndyChat() {
         return;
       }
 
-      if (lowerQuestion.includes('andy, modo estratega') || lowerQuestion.includes('andy modo estratega')) {
+      if (lowerQuestion.includes('el trabajador')) {
         setUserProfile(prev => ({ ...prev, type: 'strategist', language: 'es' }));
-        setMessages((m) => [...m, { from: 'bot', text: 'Modo Estratega Activado. 🕴️\nEnvíame la vacante (texto o imagen) y generaré el CV híbrido correspondiente listo para descargar.' }]);
+        setMessages((m) => [...m, { from: 'bot', text: 'Modo Estratega Activado. 🕴️\nEnvíame la vacante (texto o imagen). Te daré mi análisis como Asesor de RRHH y generaré el CV híbrido correspondiente listo para descargar.' }]);
         setSending(false);
         return;
       }
 
-      // Sistema anti-troll
-      const trollCheck = checkForTroll(question, userProfile);
+      // Sistema anti-troll (solo si no es estratega)
+      if (userProfile.type !== 'strategist') {
+        const trollCheck = checkForTroll(question, userProfile);
 
-      if (trollCheck.shouldBlock) {
-        setUserProfile(prev => ({ ...prev, isBlocked: true }));
-        setMessages(m => [...m, {
-          from: 'bot',
-          text: personalityConfig.anti_troll.block_message
-        }]);
-        setSending(false);
-        return;
-      }
+        if (trollCheck.shouldBlock) {
+          setUserProfile(prev => ({ ...prev, isBlocked: true }));
+          setMessages(m => [...m, {
+            from: 'bot',
+            text: personalityConfig.anti_troll.block_message
+          }]);
+          setSending(false);
+          return;
+        }
 
-      if (trollCheck.shouldWarn) {
-        setUserProfile(prev => ({ ...prev, warningCount: prev.warningCount + 1 }));
-        setMessages(m => [...m, {
-          from: 'bot',
-          text: personalityConfig.anti_troll.warning_message
-        }]);
-        setSending(false);
-        return;
+        if (trollCheck.shouldWarn) {
+          setUserProfile(prev => ({ ...prev, warningCount: prev.warningCount + 1 }));
+          setMessages(m => [...m, {
+            from: 'bot',
+            text: personalityConfig.anti_troll.warning_message
+          }]);
+          setSending(false);
+          return;
+        }
       }
 
       // Actualizar historial de mensajes
@@ -429,7 +431,7 @@ export default function AndyChat() {
       let prompt = '';
 
       if (userProfile.type === 'strategist') {
-        prompt = `Rol: Eres el Asistente Estratega de Carrera de Andrés Almeida. Tu objetivo es analizar ofertas de empleo y generar versiones optimizadas (híbridas) de su perfil profesional en formato JSON estricto, basándote exclusivamente en su base de datos.
+        prompt = `Rol: Eres el Asesor de RRHH y Estratega de Carrera personal de Andrés Almeida. Tu objetivo es analizar ofertas de empleo (incluso a partir del texto extraído de imágenes) y darle asesoría experta. Además, generarás una versión optimizada (híbrida) de su perfil para el CV en formato JSON estricto, basándote exclusivamente en su base de datos.
         Instrucciones:
         1. Analiza los Keywords de la vacante proporcionada.
         2. Determina el nivel de hibridación (ej. Data vs Finance).
@@ -452,7 +454,8 @@ export default function AndyChat() {
               "Logro 2"
             ]
           },
-          "suggestedFilename": "Sugerencia-Nombre-Rol"
+          "suggestedFilename": "Sugerencia-Nombre-Rol",
+          "advisor_message": "Escribe aquí tu análisis como Asesor de RRHH. Qué le recomiendas a Andrés para esta vacante, qué puntos fuertes tiene respecto a lo que piden, y qué posibles objeciones debería preparar para la entrevista. Háblale directamente a Andrés de forma pro y motivadora."
         }
         
         Vacante proporcionada por el usuario:
@@ -490,7 +493,7 @@ export default function AndyChat() {
 
           setMessages((m) => [...m, {
             from: 'bot',
-            text: `¡Estrategia completada! He generado y descargado el archivo **${finalFilename}** adaptado a esta vacante.\n\nDestacado:\n- Título sugerido: *${parsedData.profile.title}*\n- Habilidades clave: ${parsedData.profile.skills_focus.join(', ')}`
+            text: `💼 **Análisis de RRHH:**\n${parsedData.advisor_message || 'He analizado la vacante.'}\n\n---\n📄 ¡Estrategia completada! He generado y descargado el archivo **${finalFilename}**.\n\nDestacado:\n- Título sugerido: *${parsedData.profile.title}*\n- Habilidades clave: ${parsedData.profile.skills_focus.join(', ')}`
           }]);
         } catch (jsonError) {
           console.error('Error parsing strategist JSON:', jsonError, text);
