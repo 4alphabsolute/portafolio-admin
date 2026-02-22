@@ -476,7 +476,16 @@ export default function AndyChat() {
       const imageParts = await Promise.all(currentImages.map(fileToGenerativePart));
       const requestParts: any[] = [prompt, ...imageParts];
 
-      const result = await model.generateContent(requestParts);
+      // Add a 45-second timeout specifically for image processing on mobile networks
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT: La solicitud tardó demasiado. La imagen puede ser muy pesada o la red lenta.')), 45000)
+      );
+
+      const result = await Promise.race([
+        model.generateContent(requestParts),
+        timeoutPromise
+      ]) as any;
+
       const response = await result.response;
       const text = response.text();
 
@@ -645,14 +654,14 @@ export default function AndyChat() {
             ))}
 
             {sending && (
-              <div className="flex justify-start animate-pulse">
-                <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2">
+              <div className="flex w-full justify-start animate-slideIn mt-4 mb-2">
+                <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-3">
                   <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                   </div>
-                  <span className="text-xs text-gray-400 font-medium">Escribiendo...</span>
+                  <span className="text-xs text-blue-600 font-medium tracking-wide">Analizando...</span>
                 </div>
               </div>
             )}
