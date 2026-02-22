@@ -40,16 +40,58 @@ export default function AndyChat() {
   const [images, setImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Convert File to Gemini Inline Data
+  // Convert and Compress Image to Gemini Inline Data
   async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: string; mimeType: string } }> {
-    const base64EncodedDataPromise = new Promise<string>((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Max dimensions for compression (e.g., standard Full HD)
+          const MAX_WIDTH = 1920;
+          const MAX_HEIGHT = 1080;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Compress to JPEG with 80% quality
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const base64Data = dataUrl.split(',')[1];
+            resolve({
+              inlineData: { data: base64Data, mimeType: 'image/jpeg' },
+            });
+          } else {
+            // Fallback if canvas fails
+            resolve({
+              inlineData: { data: (event.target?.result as string).split(',')[1], mimeType: file.type },
+            });
+          }
+        };
+        img.onerror = reject;
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-    return {
-      inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
-    };
   }
 
   // Handle Paste Event
