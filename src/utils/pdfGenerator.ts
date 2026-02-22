@@ -3,10 +3,30 @@ import cvProfiles from '../data/cv-profiles.json';
 
 type ProfileKey = keyof typeof cvProfiles.profiles;
 
-export const generateDynamicCV = (profileType: ProfileKey, language: 'es' | 'en' = 'es'): void => {
-  const profile = cvProfiles.profiles[profileType] as any;
-  if (!profile) return;
+export interface CVProfileData {
+  title: string;
+  title_es?: string;
+  description: string;
+  description_en?: string;
+  skills_focus: string[];
+  skills_soft: string[];
+  skills_soft_en?: string[];
+  show_engineering?: boolean;
+}
 
+export interface CVExperienceData {
+  seguros: string[];
+  seguros_en: string[];
+  banco: string[];
+  banco_en: string[];
+}
+
+export const generateCVFromData = (
+  profile: CVProfileData,
+  experienceVariant: CVExperienceData,
+  language: 'es' | 'en' = 'es',
+  filename: string
+): void => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
@@ -75,9 +95,6 @@ export const generateDynamicCV = (profileType: ProfileKey, language: 'es' | 'en'
   doc.text(experienceTitle, margin, yPosition);
   yPosition += 10;
 
-  const variantKey = profile.special_experience || 'default';
-  const variant = (cvProfiles.experience_variants as any)[variantKey];
-
   // Banesco Seguros
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
@@ -91,14 +108,16 @@ export const generateDynamicCV = (profileType: ProfileKey, language: 'es' | 'en'
   doc.text('Banesco Seguros', margin, yPosition);
   yPosition += 6;
 
-  const segurosItems = language === 'en' ? variant.seguros_en : variant.seguros;
+  const segurosItems = language === 'en' ? (experienceVariant.seguros_en || experienceVariant.seguros) : experienceVariant.seguros;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   segurosItems.forEach((item: string) => {
     checkPageBreak(8);
-    doc.text(`• ${item}`, margin + 5, yPosition);
-    yPosition += 4;
+    // Split bullet text if it's too long
+    const itemLines = doc.splitTextToSize(`• ${item}`, pageWidth - margin * 2 - 5);
+    doc.text(itemLines, margin + 5, yPosition);
+    yPosition += itemLines.length * 4.5;
   });
   yPosition += 5;
 
@@ -116,14 +135,15 @@ export const generateDynamicCV = (profileType: ProfileKey, language: 'es' | 'en'
   doc.text('Banesco Banco Universal', margin, yPosition);
   yPosition += 6;
 
-  const bancoItems = language === 'en' ? variant.banco_en : variant.banco;
+  const bancoItems = language === 'en' ? (experienceVariant.banco_en || experienceVariant.banco) : experienceVariant.banco;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   bancoItems.forEach((item: string) => {
     checkPageBreak(8);
-    doc.text(`• ${item}`, margin + 5, yPosition);
-    yPosition += 4;
+    const itemLines = doc.splitTextToSize(`• ${item}`, pageWidth - margin * 2 - 5);
+    doc.text(itemLines, margin + 5, yPosition);
+    yPosition += itemLines.length * 4.5;
   });
   yPosition += 10;
 
@@ -215,9 +235,9 @@ export const generateDynamicCV = (profileType: ProfileKey, language: 'es' | 'en'
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   const techSkills = profile.skills_focus;
-  const softSkills = language === 'en' ? profile.skills_soft_en : profile.skills_soft;
+  const softSkills = language === 'en' ? (profile.skills_soft_en || profile.skills_soft) : profile.skills_soft;
 
-  const maxItems = Math.max(techSkills.length, softSkills.length);
+  const maxItems = Math.max(techSkills.length || 0, softSkills.length || 0);
   for (let i = 0; i < maxItems; i++) {
     checkPageBreak(5);
     if (techSkills[i]) doc.text(`• ${techSkills[i]}`, margin + 2, yPosition + (i * 4.5));
@@ -233,6 +253,17 @@ export const generateDynamicCV = (profileType: ProfileKey, language: 'es' | 'en'
   doc.setFont('helvetica', 'normal');
   doc.text(language === 'en' ? '• Spanish (Native)  • English (B2)' : '• Español (Nativo)  • Inglés (B2)', margin + 2, yPosition);
 
-  const filename = `CV_AndresAlmeida_${profileType}_${new Date().toISOString().slice(0, 10)}.pdf`;
   doc.save(filename);
+};
+
+export const generateDynamicCV = (profileType: ProfileKey, language: 'es' | 'en' = 'es'): void => {
+  const profile = cvProfiles.profiles[profileType] as any;
+  if (!profile) return;
+
+  const variantKey = profile.special_experience || 'default';
+  const experienceVariant = (cvProfiles.experience_variants as any)[variantKey];
+
+  const filename = `CV_AndresAlmeida_${profileType}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+  generateCVFromData(profile, experienceVariant, language, filename);
 };

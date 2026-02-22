@@ -10,7 +10,7 @@ interface Message {
 }
 
 interface UserProfile {
-  type: 'recruiter' | 'casual' | 'technical' | 'unknown';
+  type: 'recruiter' | 'casual' | 'technical' | 'strategist' | 'unknown';
   detectedProfile?: string;
   confidence: number;
   language: 'es' | 'en';
@@ -19,6 +19,7 @@ interface UserProfile {
   warningCount: number;
   isBlocked: boolean;
 }
+
 
 export default function AndyChat() {
   const [open, setOpen] = useState(false);
@@ -36,6 +37,37 @@ export default function AndyChat() {
   const [conversationContext, setConversationContext] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
   const [messageHistory, setMessageHistory] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Convert File to Gemini Inline Data
+  async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: string; mimeType: string } }> {
+    const base64EncodedDataPromise = new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+      reader.readAsDataURL(file);
+    });
+    return {
+      inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
+    };
+  }
+
+  // Handle Paste Event
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const newImages: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) newImages.push(file);
+      }
+    }
+    if (newImages.length > 0) {
+      setImages(prev => [...prev, ...newImages]);
+      e.preventDefault();
+    }
+  };
 
   // Detectar idioma
   const detectLanguage = (text: string): 'es' | 'en' => {
@@ -222,6 +254,8 @@ export default function AndyChat() {
     const question = input.trim();
     setMessages((m) => [...m, { from: 'user', text: question }]);
     setInput('');
+    const currentImages = [...images];
+    setImages([]); // Clear images from input area immediately after sending
 
     setSending(true);
 
@@ -231,6 +265,21 @@ export default function AndyChat() {
 
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      // Check Strategist Mode Authentication
+      const lowerQuestion = question.toLowerCase();
+      if (lowerQuestion.includes('soy andrés') || lowerQuestion.includes('soy andres')) {
+        setMessages((m) => [...m, { from: 'bot', text: 'Hola Andrés. Por favor, dime el santo y seña para activar el modo estratega.' }]);
+        setSending(false);
+        return;
+      }
+
+      if (lowerQuestion.includes('andy, modo estratega') || lowerQuestion.includes('andy modo estratega')) {
+        setUserProfile(prev => ({ ...prev, type: 'strategist', language: 'es' }));
+        setMessages((m) => [...m, { from: 'bot', text: 'Modo Estratega Activado. 🕴️\nEnvíame la vacante (texto o imagen) y generaré el CV híbrido correspondiente listo para descargar.' }]);
+        setSending(false);
+        return;
+      }
 
       // Sistema anti-troll
       const trollCheck = checkForTroll(question, userProfile);
@@ -271,7 +320,6 @@ export default function AndyChat() {
       const proactiveQuestion = generateProactiveQuestion(detectedProfile.type, detectedProfile.language);
 
       // Detectar intención explícita de descarga
-      const lowerQuestion = question.toLowerCase();
       const isDownloadIntent =
         (lowerQuestion.includes('cv') || lowerQuestion.includes('currículum') || lowerQuestion.includes('pdf')) &&
         (lowerQuestion.includes('dame') || lowerQuestion.includes('quiero') || lowerQuestion.includes('bajar') || lowerQuestion.includes('descargar') || lowerQuestion.includes('generar') || lowerQuestion.includes('si') || lowerQuestion.includes('sí') || lowerQuestion.includes('yes') || lowerQuestion.includes('please'));
@@ -375,13 +423,79 @@ export default function AndyChat() {
 
         Pregunta: ${question}`;
 
-      const prompt = (basePrompt + contextualPrompt).replace(/^\s+/gm, '');
+      let prompt = '';
 
-      const result = await model.generateContent(prompt);
+      if (userProfile.type === 'strategist') {
+        prompt = `Rol: Eres el Asistente Estratega de Carrera de Andrés Almeida. Tu objetivo es analizar ofertas de empleo y generar versiones optimizadas (híbridas) de su perfil profesional en formato JSON estricto, basándote exclusivamente en su base de datos.
+        Instrucciones:
+        1. Analiza los Keywords de la vacante proporcionada.
+        2. Determina el nivel de hibridación (ej. Data vs Finance).
+        3. No inventes información. Usa solo los datos de experiencia y skills base proporcionados.
+        4. OBLIGATORIO: Devuelve SOLO un JSON con la siguiente estructura, sin markdown (bloques \`\`\`json) ni texto adicional:
+        {
+          "profile": {
+            "title": "TÍTULO ADAPTADO A LA OFERTA",
+            "description": "Redacta un párrafo que una el rigor del Economista con la capacidad técnica del Master en Big Data, enfocado a la oferta.",
+            "skills_focus": ["Skill 1", "Skill 2", "Skill 3", "Skill 4"],
+            "skills_soft": ["Soft Skill 1", "Soft Skill 2", "Soft Skill 3"]
+          },
+          "experience": {
+            "seguros": [
+              "Adapta los logros base de Banesco Seguros enfocándolos en lo que pide la vacante. Ej: si piden automatización, resalta la reducción del 60% en tiempos de carga (ETL).",
+              "Logro 2"
+            ],
+            "banco": [
+              "Adapta los logros base de Banesco Banco Universal enfocándolos en lo que pide la vacante. Ej: Riesgos, B2B, B2C, scoring.",
+              "Logro 2"
+            ]
+          },
+          "suggestedFilename": "Sugerencia-Nombre-Rol"
+        }
+        
+        Vacante proporcionada por el usuario:
+        "${question}"
+        
+        Base de Datos Hardcodeada de Andrés:
+        ${JSON.stringify({
+          experiencia_base_seguros: cvProfiles.experience_variants.default.seguros,
+          experiencia_base_banco: cvProfiles.experience_variants.default.banco,
+          skills_tech_generales: ["SQL", "Power BI", "R", "ETL", "Tableau", "Agile", "Scrum", "React", "Modelado Financiero", "Riesgos", "Auditoría"],
+          skills_soft_generales: ["Pensamiento Crítico", "Resolución de Problemas", "Adaptabilidad", "Liderazgo", "Empatía", "Comunicación Analítica"]
+        })}`;
+      } else {
+        const promptMain = (basePrompt + contextualPrompt).replace(/^\s+/gm, '');
+        prompt = promptMain;
+      }
+
+      const imageParts = await Promise.all(currentImages.map(fileToGenerativePart));
+      const requestParts: any[] = [prompt, ...imageParts];
+
+      const result = await model.generateContent(requestParts);
       const response = await result.response;
       const text = response.text();
 
-      setMessages((m) => [...m, { from: 'bot', text }]);
+      if (userProfile.type === 'strategist') {
+        try {
+          // Clean up potential markdown code block formatting
+          const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsedData = JSON.parse(cleanText);
+
+          const { generateCVFromData } = await import('../utils/pdfGenerator');
+          const finalFilename = `CV_AndresAlmeida_${parsedData.suggestedFilename}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+          generateCVFromData(parsedData.profile, parsedData.experience, 'es', finalFilename);
+
+          setMessages((m) => [...m, {
+            from: 'bot',
+            text: `¡Estrategia completada! He generado y descargado el archivo **${finalFilename}** adaptado a esta vacante.\n\nDestacado:\n- Título sugerido: *${parsedData.profile.title}*\n- Habilidades clave: ${parsedData.profile.skills_focus.join(', ')}`
+          }]);
+        } catch (jsonError) {
+          console.error('Error parsing strategist JSON:', jsonError, text);
+          setMessages((m) => [...m, { from: 'bot', text: 'Error procesando la estrategia. El formato generado no es válido. Mostrando respuesta cruda:\\n\\n' + text }]);
+        }
+      } else {
+        setMessages((m) => [...m, { from: 'bot', text }]);
+      }
     } catch (error: any) {
       console.error('Gemini error:', error);
       setMessages((m) => [...m, {
@@ -492,13 +606,13 @@ export default function AndyChat() {
             {messages.map((m, i) => (
               <div
                 key={i}
-                className={`flex w-full ${m.from === 'user' ? 'justify-end' : 'justify-start'} animate-slideIn`}
+                className={`flex w - full ${m.from === 'user' ? 'justify-end' : 'justify-start'} animate - slideIn`}
               >
                 <div
-                  className={`max-w-[85%] p-3.5 rounded-2xl shadow-sm text-sm leading-relaxed ${m.from === 'user'
+                  className={`max - w - [85 %] p - 3.5 rounded - 2xl shadow - sm text - sm leading - relaxed ${m.from === 'user'
                     ? 'bg-blue-600 text-white rounded-tr-none'
                     : 'bg-white text-gray-900 border border-gray-100 rounded-tl-none font-medium'
-                    }`}
+                    } `}
                 >
                   {/* Markdown simplificado para el bot */}
                   {m.from === 'bot' ? (
@@ -510,7 +624,7 @@ export default function AndyChat() {
                   ) : (
                     <p className="break-words whitespace-pre-wrap">{m.text}</p>
                   )}
-                  <div className={`text-[10px] mt-1 text-right font-medium ${m.from === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
+                  <div className={`text - [10px] mt - 1 text - right font - medium ${m.from === 'user' ? 'text-blue-100' : 'text-gray-500'} `}>
                     {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
@@ -553,19 +667,56 @@ export default function AndyChat() {
 
           {/* Input Area */}
           <div className="p-4 bg-white border-t border-gray-100">
+            {images.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {images.map((img, idx) => (
+                  <div key={idx} className="relative group">
+                    <img src={URL.createObjectURL(img)} alt="preview" className="h-12 w-12 object-cover rounded-lg border border-gray-200" />
+                    <button
+                      onClick={() => setImages(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="flex gap-2 items-end">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  if (e.target.files) {
+                    setImages(prev => [...prev, ...Array.from(e.target.files!)]);
+                  }
+                }}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                title="Adjuntar imagen de la vacante"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+              </button>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !sending && send()}
-                placeholder="Escribe tu mensaje..."
+                onPaste={handlePaste}
+                placeholder="Escribe tu mensaje o pega una imagen..."
                 className="flex-1 bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                 disabled={sending}
               />
               <button
                 onClick={send}
                 className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                disabled={sending || !input.trim()}
+                disabled={sending || (!input.trim() && images.length === 0)}
               >
                 {sending ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
