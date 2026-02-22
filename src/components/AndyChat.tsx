@@ -247,11 +247,11 @@ export default function AndyChat() {
 
   const send = async () => {
     console.log('[AndyChat] send() called, input=', input);
-    if (!input.trim()) {
-      console.log('[AndyChat] send aborted: empty input');
+    if (!input.trim() && images.length === 0) {
+      console.log('[AndyChat] send aborted: empty input and no images');
       return;
     }
-    const question = input.trim();
+    const question = input.trim() || (images.length > 0 ? '[Imagen adjunta]' : '');
     setMessages((m) => [...m, { from: 'user', text: question }]);
     setInput('');
     const currentImages = [...images];
@@ -312,6 +312,9 @@ export default function AndyChat() {
       setConversationContext(newContext);
 
       const detectedProfile = detectUserType(question, userProfile);
+      if (userProfile.type === 'strategist') {
+        detectedProfile.type = 'strategist';
+      }
       setUserProfile(detectedProfile);
 
       const suggestedCV = suggestCVProfile(newContext);
@@ -498,10 +501,17 @@ export default function AndyChat() {
       }
     } catch (error: any) {
       console.error('Gemini error:', error);
-      setMessages((m) => [...m, {
-        from: 'bot',
-        text: 'Disculpa, tengo problemas técnicos. Como Analista de Datos, puedo contarte que trabajo con Power BI, R y análisis financiero en Banesco. ¿Qué te interesa saber específicamente?'
-      }]);
+      if (userProfile.type === 'strategist') {
+        setMessages((m) => [...m, {
+          from: 'bot',
+          text: `Error en Modo Estratega: ${error.message || 'Error desconocido'}\n\nDetalles técnicos para debugear en móvil.`
+        }]);
+      } else {
+        setMessages((m) => [...m, {
+          from: 'bot',
+          text: 'Disculpa, tengo problemas técnicos. Como Analista de Datos, puedo contarte que trabajo con Power BI, R y análisis financiero en Banesco. ¿Qué te interesa saber específicamente?'
+        }]);
+      }
     } finally {
       setSending(false);
     }
