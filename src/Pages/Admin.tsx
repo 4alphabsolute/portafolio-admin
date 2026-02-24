@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, auth, storage } from '../firebase';
 import BotAnalytics from '../components/BotAnalytics';
 import ContentGenerator from '../components/ContentGenerator';
 
@@ -24,6 +25,7 @@ interface Project {
   githubUrl?: string;
   liveUrl?: string;
   imageUrl?: string;
+  images?: string[];
   sourceType?: string;
   primaryKey?: string;
   visibility?: 'public' | 'draft';
@@ -84,7 +86,7 @@ export default function Admin() {
 
   // Form states
   const [certForm, setCertForm] = useState<Certificate>({ name: '', issuer: '', date: '', description: '', url: '' });
-  const [projectForm, setProjectForm] = useState<Project>({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed' });
+  const [projectForm, setProjectForm] = useState<Project>({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed', images: [] });
   const [expForm, setExpForm] = useState<Experience>({ company: '', position: '', startDate: '', endDate: '', description: '', technologies: [] });
   const [caseForm, setCaseForm] = useState<CaseStudy>({ title: '', client: '', industry: '', challenge: '', solution: '', results: '', technologies: [], duration: '' });
   const [blogForm, setBlogForm] = useState<BlogPost>({ title: '', excerpt: '', date: '', readTime: '', category: '', status: 'published', imageUrl: '', linkedinUrl: '' });
@@ -190,6 +192,50 @@ export default function Admin() {
   const deleteCertificate = async (id: string) => { if (confirm('Eliminar?')) { await deleteDoc(doc(db, 'certificates', id)); fetchData(); } };
 
   // Project Handlers
+  const uploadImageToStorage = async (file: File, folder: string) => {
+    const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+    await uploadBytes(fileRef, file);
+    return await getDownloadURL(fileRef);
+  };
+
+  const handleProjectCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    setUploading(true);
+    try {
+      const file = e.target.files[0];
+      const url = await uploadImageToStorage(file, 'projects');
+      setProjectForm(prev => ({ ...prev, imageUrl: url }));
+    } catch (error) {
+      console.error("Error uploading cover:", error);
+      alert("Error subiendo imagen de portada");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleProjectGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    setUploading(true);
+    try {
+      const files = Array.from(e.target.files);
+      const uploadPromises = files.map(file => uploadImageToStorage(file, 'projects/gallery'));
+      const urls = await Promise.all(uploadPromises);
+      setProjectForm(prev => ({ ...prev, images: [...(prev.images || []), ...urls] }));
+    } catch (error) {
+      console.error("Error uploading gallery:", error);
+      alert("Error subiendo imágenes a la galería");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeGalleryImage = (indexToRemove: number) => {
+    setProjectForm(prev => ({
+      ...prev,
+      images: prev.images?.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+
   const handleProjectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
@@ -200,13 +246,13 @@ export default function Admin() {
       } else {
         await addDoc(collection(db, 'projects'), { ...projectForm, sourceType: 'admin', createdAt: new Date(), updatedAt: new Date() });
       }
-      setProjectForm({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed', imageUrl: '' });
+      setProjectForm({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed', imageUrl: '', images: [] });
       fetchData();
     } catch (error) { console.error(error); alert('Error'); } finally { setUploading(false); }
   };
 
-  const editProject = (project: Project) => { setProjectForm(project); setEditingProject(project.id!); };
-  const cancelEditProject = () => { setProjectForm({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed', imageUrl: '' }); setEditingProject(null); };
+  const editProject = (project: Project) => { setProjectForm({ ...project, images: project.images || [] }); setEditingProject(project.id!); };
+  const cancelEditProject = () => { setProjectForm({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed', imageUrl: '', images: [] }); setEditingProject(null); };
   const deleteProject = async (id: string) => { if (confirm('Eliminar?')) { await deleteDoc(doc(db, 'projects', id)); fetchData(); } };
 
   // Experience Handlers
@@ -426,9 +472,61 @@ export default function Admin() {
                     <input type="url" value={projectForm.liveUrl || ''} onChange={(e) => setProjectForm({ ...projectForm, liveUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">URL de Imagen de Portada (Opcional)</label>
-                  <input type="url" value={projectForm.imageUrl || ''} onChange={(e) => setProjectForm({ ...projectForm, imageUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://..." />
+                <div className="space-y-4 border border-gray-200 p-4 rounded-lg bg-gray-50">
+                  <h4 className="font-medium text-gray-900 border-b pb-2">Imágenes del Proyecto</h4>
+
+                  {/* Portada */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Imagen de Portada (Principal)</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="url"
+                        value={projectForm.imageUrl || ''}
+                        onChange={(e) => setProjectForm({ ...projectForm, imageUrl: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="Pegar URL externa o..."
+                      />
+                      <span className="text-gray-500 text-sm">o</span>
+                      <label className="cursor-pointer bg-white border border-gray-300 px-3 py-2 rounded-md hover:bg-gray-50 text-sm font-medium">
+                        Subir Archivo
+                        <input type="file" accept="image/*" onChange={handleProjectCoverUpload} className="hidden" />
+                      </label>
+                    </div>
+                    {projectForm.imageUrl && (
+                      <div className="mt-2 text-xs text-green-600 flex items-center gap-1">
+                        ✓ Portada lista <img src={projectForm.imageUrl} alt="preview" className="h-6 w-6 object-cover rounded ml-2" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Galería */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Galería de Imágenes (Múltiples vistas, dashboards, etc.)</label>
+                    <label className="cursor-pointer flex items-center justify-center w-full bg-white border-2 border-dashed border-gray-300 px-3 py-4 rounded-md hover:bg-blue-50 hover:border-blue-400 transition-colors text-sm font-medium text-gray-600">
+                      📄 Clic para subir múltiples imágenes a la vez
+                      <input type="file" multiple accept="image/*" onChange={handleProjectGalleryUpload} className="hidden" />
+                    </label>
+
+                    {projectForm.images && projectForm.images.length > 0 && (
+                      <div className="mt-3 grid grid-cols-4 gap-2">
+                        {projectForm.images.map((img, idx) => (
+                          <div key={idx} className="relative group rounded-md overflow-hidden border border-gray-200 aspect-video">
+                            <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button
+                                type="button"
+                                onClick={() => removeGalleryImage(idx)}
+                                className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                title="Eliminar"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
