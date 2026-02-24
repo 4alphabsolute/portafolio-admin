@@ -200,13 +200,13 @@ export default function Admin() {
       } else {
         await addDoc(collection(db, 'projects'), { ...projectForm, sourceType: 'admin', createdAt: new Date(), updatedAt: new Date() });
       }
-      setProjectForm({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed' });
+      setProjectForm({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed', imageUrl: '' });
       fetchData();
     } catch (error) { console.error(error); alert('Error'); } finally { setUploading(false); }
   };
 
   const editProject = (project: Project) => { setProjectForm(project); setEditingProject(project.id!); };
-  const cancelEditProject = () => { setProjectForm({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed' }); setEditingProject(null); };
+  const cancelEditProject = () => { setProjectForm({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed', imageUrl: '' }); setEditingProject(null); };
   const deleteProject = async (id: string) => { if (confirm('Eliminar?')) { await deleteDoc(doc(db, 'projects', id)); fetchData(); } };
 
   // Experience Handlers
@@ -416,13 +416,19 @@ export default function Admin() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tecnologías</label>
                   <input type="text" value={projectForm.technologies.join(', ')} onChange={(e) => setProjectForm({ ...projectForm, technologies: e.target.value.split(',').map(t => t.trim()) })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">GitHub URL</label>
-                  <input type="url" value={projectForm.githubUrl || ''} onChange={(e) => setProjectForm({ ...projectForm, githubUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">GitHub URL</label>
+                    <input type="url" value={projectForm.githubUrl || ''} onChange={(e) => setProjectForm({ ...projectForm, githubUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Live URL</label>
+                    <input type="url" value={projectForm.liveUrl || ''} onChange={(e) => setProjectForm({ ...projectForm, liveUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Live URL</label>
-                  <input type="url" value={projectForm.liveUrl || ''} onChange={(e) => setProjectForm({ ...projectForm, liveUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">URL de Imagen de Portada (Opcional)</label>
+                  <input type="url" value={projectForm.imageUrl || ''} onChange={(e) => setProjectForm({ ...projectForm, imageUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://..." />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
