@@ -670,17 +670,17 @@ export default function AndyChat() {
             {messages.map((m, i) => (
               <div
                 key={i}
-                className={`flex w - full ${m.from === 'user' ? 'justify-end' : 'justify-start'} animate - slideIn`}
+                className={`flex w-full ${m.from === 'user' ? 'justify-end' : 'justify-start'} animate-slideIn`}
               >
                 <div
-                  className={`max - w - [85 %] p - 3.5 rounded - 2xl shadow - sm text - sm leading - relaxed ${m.from === 'user'
-                    ? 'bg-blue-600 text-white rounded-tr-none'
-                    : 'bg-white text-gray-900 border border-gray-100 rounded-tl-none font-medium'
-                    } `}
+                  className={`max-w-[85%] sm:max-w-[80%] p-3.5 rounded-2xl shadow-sm text-sm leading-relaxed ${m.from === 'user'
+                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-tr-none'
+                    : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none font-normal'
+                    }`}
                 >
                   {/* Markdown simplificado para el bot */}
                   {m.from === 'bot' ? (
-                    <div className="prose prose-sm prose-blue max-w-none dark:prose-invert text-gray-900" dangerouslySetInnerHTML={{
+                    <div className="prose prose-sm max-w-none text-gray-800" dangerouslySetInnerHTML={{
                       __html:
                         m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                           .replace(/\n/g, '<br/>')
@@ -688,7 +688,7 @@ export default function AndyChat() {
                   ) : (
                     <p className="break-words whitespace-pre-wrap">{m.text}</p>
                   )}
-                  <div className={`text - [10px] mt - 1 text - right font - medium ${m.from === 'user' ? 'text-blue-100' : 'text-gray-500'} `}>
+                  <div className={`text-[10px] mt-2 text-right font-medium ${m.from === 'user' ? 'text-blue-100' : 'text-gray-400'}`}>
                     {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
