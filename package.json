@@ -15,6 +15,7 @@
     "dev:all": "concurrently \"npm:flowise:start\" \"npm:proxy\" \"npm:dev\""
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.19.0",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.57.4",
     "@tailwindcss/typography": "^0.5.19",
@@ -26,7 +27,7 @@
     "emailjs-com": "^3.2.0",
     "express": "^5.1.0",
     "firebase": "^12.3.0",
-    "firebase-admin": "^13.6.0",
+    "firebase-admin": "^13.6.1",
     "firebase-functions": "^7.0.0",
     "firebase-tools": "^14.18.0",
     "jspdf": "^3.0.3",
