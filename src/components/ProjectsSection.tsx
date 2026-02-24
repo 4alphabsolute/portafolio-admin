@@ -119,9 +119,10 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
                     )}
                   </div>
 
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {project.description}
-                  </p>
+                  <div
+                    className="text-gray-600 mb-4 line-clamp-3 prose prose-sm max-w-none text-sm"
+                    dangerouslySetInnerHTML={{ __html: project.description }}
+                  />
 
                   <button
                     onClick={() => setSelectedProject(project)}
@@ -219,9 +220,10 @@ export default function ProjectsSection({ t, language = 'es' }: ProjectsSectionP
                   )}
                 </div>
 
-                <div className="my-6 prose prose-blue max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {selectedProject.description}
-                </div>
+                <div
+                  className="my-6 prose prose-blue max-w-none text-gray-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: selectedProject.description }}
+                />
 
                 <h4 className="font-semibold text-gray-900 mb-3 text-lg">Tecnologías Utilizadas</h4>
                 <div className="flex flex-wrap gap-2 mb-8">

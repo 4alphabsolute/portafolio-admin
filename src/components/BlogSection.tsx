@@ -7,6 +7,7 @@ interface BlogPost {
   id?: string;
   title: string;
   excerpt: string;
+  content?: string;
   date: string;
   readTime: string;
   category: string;
@@ -25,6 +26,7 @@ export default function BlogSection({ t, language = 'es' }: BlogSectionProps) {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'articles' | 'analysis'>('articles');
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
 
   useEffect(() => {
     const fetchBlogPosts = async () => {
@@ -141,12 +143,22 @@ export default function BlogSection({ t, language = 'es' }: BlogSectionProps) {
                     <span>{post.readTime} {t?.blog?.readTime || 'lectura'}</span>
                   </div>
 
-                  {post.status === 'published' && post.linkedinUrl ? (
+                  {post.content && post.content.trim().length > 0 ? (
+                    <button
+                      onClick={() => setSelectedPost(post)}
+                      className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      {t?.blog?.readArticle || 'Leer Artículo'}
+                      <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                      </svg>
+                    </button>
+                  ) : post.status === 'published' && post.linkedinUrl ? (
                     <a
                       href={post.linkedinUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer"
                     >
                       {t?.blog?.readOnLinkedin || 'Leer en LinkedIn'}
                       <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -172,6 +184,60 @@ export default function BlogSection({ t, language = 'es' }: BlogSectionProps) {
                 <p className="text-gray-500 text-lg">{t?.blog?.noPosts || 'No hay artículos publicados aún.'}</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Modal de Artículo de Blog */}
+        {selectedPost && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+            <div
+              className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slideIn relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedPost(null)}
+                className="absolute top-4 right-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full p-2 transition-colors z-10"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <div className="p-8 md:p-12">
+                <div className="flex items-center space-x-4 mb-6">
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                    {selectedPost.category}
+                  </span>
+                  <span className="text-gray-500 text-sm">{selectedPost.date}</span>
+                  <span className="text-gray-500 text-sm">• {selectedPost.readTime} lect.</span>
+                </div>
+
+                <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8 leading-tight">
+                  {selectedPost.title}
+                </h3>
+
+                <div
+                  className="prose prose-blue prose-lg max-w-none text-gray-800 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: selectedPost.content || '' }}
+                />
+
+                {selectedPost.linkedinUrl && (
+                  <div className="mt-12 pt-8 border-t border-gray-100 flex justify-center">
+                    <a
+                      href={selectedPost.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-6 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium border border-blue-200"
+                    >
+                      Ver post original en LinkedIn
+                      <svg className="ml-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                      </svg>
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

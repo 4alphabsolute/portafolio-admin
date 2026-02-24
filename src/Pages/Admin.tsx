@@ -4,6 +4,18 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth, storage } from '../firebase';
 import BotAnalytics from '../components/BotAnalytics';
 import ContentGenerator from '../components/ContentGenerator';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    ['link', 'image', 'video'],
+    ['clean']
+  ]
+};
 
 interface Certificate {
   id?: string;
@@ -63,6 +75,7 @@ interface BlogPost {
   id?: string;
   title: string;
   excerpt: string;
+  content?: string;
   date: string;
   readTime: string;
   category: string;
@@ -89,14 +102,15 @@ export default function Admin() {
   const [projectForm, setProjectForm] = useState<Project>({ title: '', description: '', technologies: [], visibility: 'public', status: 'completed', images: [] });
   const [expForm, setExpForm] = useState<Experience>({ company: '', position: '', startDate: '', endDate: '', description: '', technologies: [] });
   const [caseForm, setCaseForm] = useState<CaseStudy>({ title: '', client: '', industry: '', challenge: '', solution: '', results: '', technologies: [], duration: '' });
-  const [blogForm, setBlogForm] = useState<BlogPost>({ title: '', excerpt: '', date: '', readTime: '', category: '', status: 'published', imageUrl: '', linkedinUrl: '' });
+  const [blogForm, setBlogForm] = useState<BlogPost>({ title: '', excerpt: '', content: '', date: '', readTime: '', category: '', status: 'published', imageUrl: '', linkedinUrl: '' });
   const [uploading, setUploading] = useState(false);
 
   const handleDraftSelection = (draft: { title: string; body: string; tags: string[] }) => {
     setBlogForm({
       ...blogForm,
       title: draft.title,
-      excerpt: draft.body.substring(0, 200) + '...',
+      excerpt: draft.body.replace(/<[^>]+>/g, '').substring(0, 150) + '...',
+      content: draft.body,
       category: draft.tags[0] || 'General',
     });
     setActiveTab('blog');
@@ -456,7 +470,15 @@ export default function Admin() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                  <textarea value={projectForm.description} onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows={3} required />
+                  <div className="bg-white">
+                    <ReactQuill
+                      theme="snow"
+                      value={projectForm.description || ''}
+                      onChange={(val) => setProjectForm({ ...projectForm, description: val })}
+                      modules={quillModules}
+                      className="h-48 mb-12"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tecnologías</label>
@@ -740,14 +762,26 @@ export default function Admin() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Extracto</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Extracto (Resumen corto)</label>
                   <textarea
                     value={blogForm.excerpt}
                     onChange={(e) => setBlogForm({ ...blogForm, excerpt: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3}
+                    rows={2}
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contenido Completo del Artículo</label>
+                  <div className="bg-white">
+                    <ReactQuill
+                      theme="snow"
+                      value={blogForm.content || ''}
+                      onChange={(val) => setBlogForm({ ...blogForm, content: val })}
+                      modules={quillModules}
+                      className="h-64 mb-12"
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
