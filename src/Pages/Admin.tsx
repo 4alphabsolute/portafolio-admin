@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth, storage } from '../firebase';
@@ -6,16 +6,6 @@ import BotAnalytics from '../components/BotAnalytics';
 import ContentGenerator from '../components/ContentGenerator';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-
-const quillModules = {
-  toolbar: [
-    [{ 'header': [1, 2, 3, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    ['link', 'image', 'video'],
-    ['clean']
-  ]
-};
 
 interface Certificate {
   id?: string;
@@ -128,6 +118,17 @@ export default function Admin() {
   const [debugData, setDebugData] = useState<any>(null);
   const [debugLoading, setDebugLoading] = useState(false);
   const [debugError, setDebugError] = useState<string | null>(null);
+
+  // Memoize quill modules to prevent re-renders of the editor
+  const modules = useMemo(() => ({
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['link', 'image', 'video'],
+      ['clean']
+    ]
+  }), []);
 
   useEffect(() => {
     // Auth is now handled by PrivateRoute
@@ -474,8 +475,12 @@ export default function Admin() {
                     <ReactQuill
                       theme="snow"
                       value={projectForm.description || ''}
-                      onChange={(val) => setProjectForm({ ...projectForm, description: val })}
-                      modules={quillModules}
+                      onChange={(val) => {
+                        if (val !== projectForm.description) {
+                          setProjectForm(prev => ({ ...prev, description: val }));
+                        }
+                      }}
+                      modules={modules}
                       className="h-48 mb-12"
                     />
                   </div>
@@ -777,8 +782,12 @@ export default function Admin() {
                     <ReactQuill
                       theme="snow"
                       value={blogForm.content || ''}
-                      onChange={(val) => setBlogForm({ ...blogForm, content: val })}
-                      modules={quillModules}
+                      onChange={(val) => {
+                        if (val !== blogForm.content) {
+                          setBlogForm(prev => ({ ...prev, content: val }));
+                        }
+                      }}
+                      modules={modules}
                       className="h-64 mb-12"
                     />
                   </div>
