@@ -605,7 +605,7 @@ export default function AndyChat() {
       </div>
 
       {open && (
-        <div className="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[500px] h-[600px] max-h-[70vh] bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-100 ring-1 ring-black/5 font-sans">
+        <div className="fixed bottom-24 right-6 w-96 sm:w-[500px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[70vh] bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-gray-100 ring-1 ring-black/5 font-sans">
           {/* Header */}
           <div className="bg-white border-b border-gray-100 p-4">
             <div className="flex items-center gap-3">
@@ -680,13 +680,13 @@ export default function AndyChat() {
                 >
                   {/* Markdown simplificado para el bot */}
                   {m.from === 'bot' ? (
-                    <div className="prose prose-sm max-w-none text-gray-800 break-words [word-break:break-word]" dangerouslySetInnerHTML={{
+                    <div className="prose prose-sm max-w-none text-gray-800" dangerouslySetInnerHTML={{
                       __html:
                         m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                           .replace(/\n/g, '<br/>')
                     }} />
                   ) : (
-                    <p className="break-words whitespace-pre-wrap [word-break:break-word]">{m.text}</p>
+                    <p className="break-words whitespace-pre-wrap">{m.text}</p>
                   )}
                   <div className={`text-[10px] mt-2 text-right font-medium ${m.from === 'user' ? 'text-blue-100' : 'text-gray-400'}`}>
                     {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
