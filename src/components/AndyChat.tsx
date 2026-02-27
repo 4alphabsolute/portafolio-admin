@@ -680,13 +680,11 @@ export default function AndyChat() {
                 >
                   {/* Markdown simplificado para el bot */}
                   {m.from === 'bot' ? (
-                    <div className="prose prose-sm max-w-full text-gray-800 break-words overflow-hidden"
-                      style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
-                      dangerouslySetInnerHTML={{
-                        __html:
-                          m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\n/g, '<br/>')
-                      }} />
+                    <div className="prose prose-sm max-w-none text-gray-800 break-words [word-break:break-word]" dangerouslySetInnerHTML={{
+                      __html:
+                        m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/\n/g, '<br/>')
+                    }} />
                   ) : (
                     <p className="break-words whitespace-pre-wrap [word-break:break-word]">{m.text}</p>
                   )}
