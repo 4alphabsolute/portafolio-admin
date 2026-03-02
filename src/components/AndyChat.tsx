@@ -554,9 +554,13 @@ export default function AndyChat() {
           const parsedData = JSON.parse(cleanText);
 
           const { generateCVFromData } = await import('../utils/pdfGenerator');
-          const finalFilename = `CV_AndresAlmeida_${parsedData.suggestedFilename}_${new Date().toISOString().slice(0, 10)}.pdf`;
-
           const cvLanguage = parsedData.language === 'en' ? 'en' : 'es';
+
+          let cleanSuffix = (parsedData.suggestedFilename || 'Perfil').replace(/andres|almeida|cv|_|-/ig, '').trim();
+          if (!cleanSuffix) cleanSuffix = 'Estrategia';
+
+          const finalFilename = `CV_AndresAlmeida_${cvLanguage.toUpperCase()}_${cleanSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
           generateCVFromData(parsedData.profile, parsedData.experience, cvLanguage, finalFilename);
 
           setMessages((m) => [...m, {

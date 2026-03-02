@@ -263,7 +263,8 @@ export const generateDynamicCV = (profileType: ProfileKey, language: 'es' | 'en'
   const variantKey = profile.special_experience || 'default';
   const experienceVariant = (cvProfiles.experience_variants as any)[variantKey];
 
-  const filename = `CV_AndresAlmeida_${profileType}_${new Date().toISOString().slice(0, 10)}.pdf`;
+  const fileLang = language.toUpperCase();
+  const filename = `CV_AndresAlmeida_${fileLang}_${profileType}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
   generateCVFromData(profile, experienceVariant, language, filename);
 };
