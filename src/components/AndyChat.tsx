@@ -7,6 +7,7 @@ import personalityConfig from '../data/personality-config.json';
 interface Message {
   from: 'user' | 'bot';
   text: string;
+  rawContent?: string;
 }
 
 interface UserProfile {
@@ -478,8 +479,10 @@ export default function AndyChat() {
         1. Analiza los Keywords de la vacante proporcionada.
         2. Determina el nivel de hibridación (ej. Data vs Finance).
         3. No inventes información. Usa solo los datos de experiencia y skills base proporcionados.
-        4. OBLIGATORIO: Devuelve SOLO un JSON con la siguiente estructura, sin markdown (bloques \`\`\`json) ni texto adicional:
+        4. DETECTA EL IDIOMA de la vacante. Si está en inglés, TODO el texto generado en el JSON (título, descripción, logros, mensaje) DEBE estar traducido a un inglés profesional excelente. Si está en español, en español.
+        5. OBLIGATORIO: Devuelve SOLO un JSON con la siguiente estructura, sin markdown (bloques \`\`\`json) ni texto adicional:
         {
+          "language": "es o en (dependiendo del idioma detectado de la vacante)",
           "profile": {
             "title": "TÍTULO ADAPTADO A LA OFERTA",
             "description": "Redacta un párrafo que una el rigor del Economista con la capacidad técnica del Master en Big Data, enfocado a la oferta.",
@@ -516,7 +519,20 @@ export default function AndyChat() {
       }
 
       const imageParts = await Promise.all(currentImages.map(fileToGenerativePart));
-      const requestParts: any[] = [prompt, ...imageParts];
+      const formattedRequestParts = [
+        { text: prompt },
+        ...imageParts
+      ];
+
+      const historyContents = messages.map(msg => ({
+        role: msg.from === 'bot' ? 'model' : 'user',
+        parts: [{ text: msg.rawContent || msg.text }]
+      }));
+
+      const contents = [
+        ...historyContents,
+        { role: 'user', parts: formattedRequestParts }
+      ];
 
       // Add a 45-second timeout specifically for image processing on mobile networks
       const timeoutPromise = new Promise((_, reject) =>
@@ -524,7 +540,7 @@ export default function AndyChat() {
       );
 
       const result = await Promise.race([
-        model.generateContent(requestParts),
+        model.generateContent({ contents }),
         timeoutPromise
       ]) as any;
 
@@ -540,11 +556,13 @@ export default function AndyChat() {
           const { generateCVFromData } = await import('../utils/pdfGenerator');
           const finalFilename = `CV_AndresAlmeida_${parsedData.suggestedFilename}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
-          generateCVFromData(parsedData.profile, parsedData.experience, 'es', finalFilename);
+          const cvLanguage = parsedData.language === 'en' ? 'en' : 'es';
+          generateCVFromData(parsedData.profile, parsedData.experience, cvLanguage, finalFilename);
 
           setMessages((m) => [...m, {
             from: 'bot',
-            text: `💼 **Análisis de RRHH:**\n${parsedData.advisor_message || 'He analizado la vacante.'}\n\n---\n📄 ¡Estrategia completada! He generado y descargado el archivo **${finalFilename}**.\n\nDestacado:\n- Título sugerido: *${parsedData.profile.title}*\n- Habilidades clave: ${parsedData.profile.skills_focus.join(', ')}`
+            text: `💼 **Análisis de RRHH:**\n${parsedData.advisor_message || 'He analizado la vacante.'}\n\n---\n📄 ¡Estrategia completada! He generado y descargado el archivo **${finalFilename}**.\n\nDestacado:\n- Título sugerido: *${parsedData.profile.title}*\n- Habilidades clave: ${parsedData.profile.skills_focus.join(', ')}`,
+            rawContent: cleanText
           }]);
         } catch (jsonError) {
           console.error('Error parsing strategist JSON:', jsonError, text);
