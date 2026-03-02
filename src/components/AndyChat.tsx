@@ -258,13 +258,13 @@ export default function AndyChat() {
   };
 
   // Generar PDF dinámico
-  const generateDynamicCV = async (profileType: string) => {
+  const generateDynamicCV = async (profileType: string, language: 'es' | 'en' = 'es') => {
     const profile = cvProfiles.profiles[profileType as keyof typeof cvProfiles.profiles];
     if (!profile) return;
 
     try {
       const { generateDynamicCV: generatePDF } = await import('../utils/pdfGenerator');
-      generatePDF(profileType as keyof typeof cvProfiles.profiles, userProfile.language);
+      generatePDF(profileType as keyof typeof cvProfiles.profiles, language);
 
       // Agregar mensaje del bot confirmando la descarga
       const confirmMessage = userProfile.language === 'en' ?
@@ -367,14 +367,14 @@ export default function AndyChat() {
       // Generar pregunta proactiva
       const proactiveQuestion = generateProactiveQuestion(detectedProfile.type, detectedProfile.language);
 
-      // Detectar intención explícita de descarga
+      // Detectar intención explícita de descarga (Deshabilitado en Modo Estratega para permitir iteración)
       const isDownloadIntent =
         (lowerQuestion.includes('cv') || lowerQuestion.includes('currículum') || lowerQuestion.includes('pdf')) &&
-        (lowerQuestion.includes('dame') || lowerQuestion.includes('quiero') || lowerQuestion.includes('bajar') || lowerQuestion.includes('descargar') || lowerQuestion.includes('generar') || lowerQuestion.includes('si') || lowerQuestion.includes('sí') || lowerQuestion.includes('yes') || lowerQuestion.includes('please'));
+        (lowerQuestion.includes('dame') || lowerQuestion.includes('quiero') || lowerQuestion.includes('bajar') || lowerQuestion.includes('descargar') || lowerQuestion.includes('generar') || lowerQuestion.includes('si') || lowerQuestion.includes('sí') || lowerQuestion.includes('yes') || lowerQuestion.includes('please') || lowerQuestion.includes('traducido'));
 
-      if (isDownloadIntent && detectedProfile.type !== 'unknown') {
+      if (isDownloadIntent && detectedProfile.type !== 'unknown' && userProfile.type !== 'strategist') {
         setUserProfile(prev => ({ ...prev, type: detectedProfile.type })); // Forzar el tipo detectado
-        await generateDynamicCV(suggestedCV);
+        await generateDynamicCV(suggestedCV, detectedProfile.language);
         setSending(false);
         return;
       }
@@ -736,7 +736,7 @@ export default function AndyChat() {
                 </span>
               </div>
               <button
-                onClick={() => generateDynamicCV(suggestCVProfile(conversationContext))}
+                onClick={() => generateDynamicCV(suggestCVProfile(conversationContext), userProfile.language)}
                 className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
