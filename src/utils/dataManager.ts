@@ -83,94 +83,51 @@ export const checkMigrationStatus = async () => {
   }
 };
 
-// Guardar interacción del bot con análisis de Gemini
-export const saveBotInteraction = async (interaction: {
-  userMessage: string;
-  botResponse: string;
-  userAgent?: string;
-  timestamp: Date;
-}) => {
-  try {
-    // Analizar si la interacción es relevante usando Gemini
-    const relevanceAnalysis = await analyzeInteractionRelevance(interaction);
-    
-    if (relevanceAnalysis.isRelevant) {
-      await addDoc(collection(db, 'bot_interactions'), {
-        ...interaction,
-        analysis: relevanceAnalysis,
-        createdAt: new Date(),
-        isRelevant: true
-      });
-      console.log('💬 Interacción relevante guardada');
-      return true;
-    } else {
-      console.log('🚫 Interacción descartada (no relevante)');
-      return false;
-    }
-  } catch (error) {
-    console.error('Error saving interaction:', error);
-    return false;
+// ──────────────────────────────────────────────────────────────────
+// BOT INTERACTIONS
+// ──────────────────────────────────────────────────────────────────
+
+type UserType = 'recruiter' | 'technical' | 'strategist' | 'casual' | 'unknown';
+
+// Categoriza la interacción directamente desde el tipo de usuario,
+// sin necesitar llamadas a un servidor externo.
+const categorizeFromUserType = (userType: UserType): { isRelevant: boolean; category: string; priority: string; summary: string } => {
+  switch (userType) {
+    case 'recruiter':
+      return { isRelevant: true, category: 'recruitment', priority: 'high', summary: 'Interacción de reclutador detectada' };
+    case 'strategist':
+      return { isRelevant: true, category: 'recruitment', priority: 'high', summary: 'Sesión de Modo Estratega (generación de CV)' };
+    case 'technical':
+      return { isRelevant: true, category: 'technical', priority: 'medium', summary: 'Consulta técnica detectada' };
+    case 'casual':
+      return { isRelevant: true, category: 'general', priority: 'low', summary: 'Conversación general' };
+    default:
+      return { isRelevant: false, category: 'general', priority: 'low', summary: 'Interacción sin clasificar' };
   }
 };
 
-// Analizar relevancia de la interacción con Gemini
-const analyzeInteractionRelevance = async (interaction: any) => {
+export const saveBotInteraction = async (interaction: {
+  userMessage: string;
+  botResponse: string;
+  userType: UserType;
+  timestamp: Date;
+}) => {
   try {
-    const prompt = `
-    Analiza esta interacción de chatbot y determina si es relevante para un reclutador o empleador:
-    
-    Usuario: "${interaction.userMessage}"
-    Bot: "${interaction.botResponse}"
-    
-    Responde en JSON:
-    {
-      "isRelevant": boolean,
-      "category": "recruitment" | "technical" | "general" | "spam",
-      "summary": "resumen en 1 línea",
-      "priority": "high" | "medium" | "low"
-    }
-    
-    Considera relevante si:
-    - Preguntas sobre experiencia laboral, habilidades técnicas
-    - Consultas sobre disponibilidad, salario, proyectos
-    - Interés en contratación o colaboración
-    - Preguntas técnicas específicas sobre tecnologías
-    
-    NO relevante:
-    - Saludos simples, pruebas del bot
-    - Preguntas muy generales sin contexto profesional
-    - Spam o mensajes sin sentido
-    `;
+    const analysis = categorizeFromUserType(interaction.userType);
+    if (!analysis.isRelevant) return false;
 
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: prompt,
-        isAnalysis: true
-      })
+    await addDoc(collection(db, 'bot_interactions'), {
+      userMessage: interaction.userMessage.substring(0, 500),
+      botResponse: interaction.botResponse.substring(0, 500),
+      analysis,
+      userType: interaction.userType,
+      timestamp: interaction.timestamp,
+      createdAt: new Date(),
     });
-
-    if (response.ok) {
-      const result = await response.text();
-      return JSON.parse(result);
-    }
-    
-    // Fallback si falla el análisis
-    return {
-      isRelevant: true,
-      category: 'general',
-      summary: 'Análisis no disponible',
-      priority: 'medium'
-    };
+    return true;
   } catch (error) {
-    console.error('Error analyzing relevance:', error);
-    return {
-      isRelevant: true,
-      category: 'general', 
-      summary: 'Error en análisis',
-      priority: 'medium'
-    };
+    console.error('Error saving bot interaction:', error);
+    return false;
   }
 };
 
@@ -179,29 +136,49 @@ export const getBotStats = async () => {
   try {
     const interactions = await getDocs(collection(db, 'bot_interactions'));
     const data = interactions.docs.map(doc => doc.data());
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const stats = {
+
+    return {
       total: data.length,
-      today: data.filter(i => i.createdAt?.toDate() >= today).length,
+      today: data.filter(i => i.createdAt?.toDate?.() >= today).length,
       byCategory: {
         recruitment: data.filter(i => i.analysis?.category === 'recruitment').length,
         technical: data.filter(i => i.analysis?.category === 'technical').length,
-        general: data.filter(i => i.analysis?.category === 'general').length
+        general: data.filter(i => i.analysis?.category === 'general').length,
       },
-      highPriority: data.filter(i => i.analysis?.priority === 'high').length
+      highPriority: data.filter(i => i.analysis?.priority === 'high').length,
     };
-    
-    return stats;
   } catch (error) {
     console.error('Error getting bot stats:', error);
-    return {
-      total: 0,
-      today: 0,
-      byCategory: { recruitment: 0, technical: 0, general: 0 },
-      highPriority: 0
-    };
+    return { total: 0, today: 0, byCategory: { recruitment: 0, technical: 0, general: 0 }, highPriority: 0 };
+  }
+};
+
+// ──────────────────────────────────────────────────────────────────
+// PAGE VISITS
+// ──────────────────────────────────────────────────────────────────
+
+export const savePageVisit = async () => {
+  try {
+    await addDoc(collection(db, 'page_visits'), {
+      timestamp: new Date(),
+      language: navigator.language || 'unknown',
+      userAgent: navigator.userAgent.substring(0, 200),
+    });
+  } catch (error) {
+    // Falla silenciosamente — no interrumpir la navegación
+    console.warn('Could not save page visit:', error);
+  }
+};
+
+export const getPageVisitCount = async (): Promise<number> => {
+  try {
+    const snapshot = await getDocs(collection(db, 'page_visits'));
+    return snapshot.size;
+  } catch (error) {
+    console.error('Error getting page visit count:', error);
+    return 0;
   }
 };

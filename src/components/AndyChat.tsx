@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import cvProfiles from '../data/cv-profiles.json';
 import personalityConfig from '../data/personality-config.json';
+import { saveBotInteraction } from '../utils/dataManager';
 
 interface Message {
   from: 'user' | 'bot';
@@ -563,17 +564,23 @@ export default function AndyChat() {
 
           generateCVFromData(parsedData.profile, parsedData.experience, cvLanguage, finalFilename);
 
+          const displayText = `💼 **Análisis de RRHH:**\n${parsedData.advisor_message || 'He analizado la vacante.'}\n\n---\n📄 ¡Estrategia completada! He generado y descargado el archivo **${finalFilename}**.\n\nDestacado:\n- Título sugerido: *${parsedData.profile.title}*\n- Habilidades clave: ${parsedData.profile.skills_focus.join(', ')}`;
           setMessages((m) => [...m, {
             from: 'bot',
-            text: `💼 **Análisis de RRHH:**\n${parsedData.advisor_message || 'He analizado la vacante.'}\n\n---\n📄 ¡Estrategia completada! He generado y descargado el archivo **${finalFilename}**.\n\nDestacado:\n- Título sugerido: *${parsedData.profile.title}*\n- Habilidades clave: ${parsedData.profile.skills_focus.join(', ')}`,
+            text: displayText,
             rawContent: cleanText
           }]);
+
+          // Guardar interacción en Firestore
+          saveBotInteraction({ userMessage: question, botResponse: displayText, userType: 'strategist', timestamp: new Date() });
         } catch (jsonError) {
           console.error('Error parsing strategist JSON:', jsonError, text);
           setMessages((m) => [...m, { from: 'bot', text: 'Error procesando la estrategia. El formato generado no es válido. Mostrando respuesta cruda:\\n\\n' + text }]);
         }
       } else {
         setMessages((m) => [...m, { from: 'bot', text }]);
+        // Guardar interacción en Firestore
+        saveBotInteraction({ userMessage: question, botResponse: text, userType: userProfile.type, timestamp: new Date() });
       }
     } catch (error: any) {
       console.error('Gemini error:', error);

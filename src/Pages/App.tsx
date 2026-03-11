@@ -15,6 +15,7 @@ import FloatingParticles from '../components/FloatingParticles';
 import SEO from '../components/SEO';
 import StructuredData from '../components/StructuredData';
 import { translations } from '../translations';
+import { savePageVisit } from '../utils/dataManager';
 
 function App() {
   const [language, setLanguage] = useState<'es' | 'en'>('es');
@@ -26,6 +27,11 @@ function App() {
     }
   }, []);
 
+  // Registrar visita a la página en Firestore (anónimo)
+  useEffect(() => {
+    savePageVisit();
+  }, []);
+
   const toggleLanguage = () => {
     const newLanguage = language === 'es' ? 'en' : 'es';
     setLanguage(newLanguage);
@@ -33,6 +39,7 @@ function App() {
   };
 
   const t = translations[language];
+
 
   // Google Tag Manager Script
   useEffect(() => {
