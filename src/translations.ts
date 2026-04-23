@@ -15,9 +15,9 @@ export const translations = {
     about: {
       title: 'Sobre mí',
       description:
-        'En un mundo de especialistas, yo elijo ser el puente. Como Economista, entiendo el ROI y la estrategia. Como Analista, encuentro la verdad en los datos. Y como Developer, construyo las herramientas para solucionar los problemas que encuentro.',
+        'En un mundo de especialistas, yo elijo ser el puente. Como Economista, entiendo el ROI y la estrategia. Como Analista, encuentro la verdad en los datos. Y como Builder, diseño sistemas agénticos mediante Spec Driven Development (SDD) para solucionar los problemas que encuentro.',
       education:
-        'Actualmente curso un MBA en EUDE Business School, sumado a mi Máster en Business Intelligence. Mi enfoque es híbrido: combino la visión de negocio con la capacidad técnica (Python, SQL, React) para crear soluciones que no solo funcionan, sino que generan valor real.',
+        'Formado con un MBA y un Máster en Business Intelligence, mi enfoque es la eficiencia radical. Combino la visión de negocio con capacidades técnicas avanzadas (Python, SQL, React) y orquestación de IA (MCP, Workflows) para crear soluciones que no solo automatizan, sino que transforman resultados.',
     },
     experience: {
       title: 'Experiencia Profesional',
@@ -150,9 +150,9 @@ export const translations = {
     about: {
       title: 'About Me',
       description:
-        'In a world of specialists, I choose to be the bridge. As an Economist, I understand ROI and strategy. As an Analyst, I find the truth in data. And as a Developer, I build the tools to solve the problems I find.',
+        'In a world of specialists, I choose to be the bridge. As an Economist, I understand ROI and strategy. As an Analyst, I find the truth in data. And as a Builder, I design agentic systems through Spec Driven Development (SDD) to solve the problems I find.',
       education:
-        'Currently pursuing an MBA at EUDE Business School, adding to my Master in Business Intelligence. My approach is hybrid: combining business vision with technical capability (Python, SQL, React) to create solutions that not only work but generate real value.',
+        'Equipped with an MBA and a Master in Business Intelligence, my focus is radical efficiency. I combine business vision with advanced technical capabilities (Python, SQL, React) and AI orchestration (MCP, Workflows) to create solutions that don\'t just automate, but transform results.',
     },
     experience: {
       title: 'Professional Experience',

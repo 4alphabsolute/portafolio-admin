@@ -62,6 +62,12 @@
         "Business Intelligence",
         "Estrategia"
       ],
+      "skills_focus_en": [
+        "Agile Methodologies",
+        "Product Management",
+        "Business Intelligence",
+        "Strategy"
+      ],
       "skills_soft": [
         "Adaptabilidad al Cambio",
         "Liderazgo Transversal",
@@ -74,27 +80,30 @@
       ]
     },
     "BUILDER": {
-      "title": "AI Solutions Developer",
-      "title_es": "Desarrollador de Soluciones IA",
-      "description": "Constructor de Soluciones Digitales y Especialista en IA Aplicada. Combino ingeniería de software con la potencia de los LLMs para desarrollar sistemas completos (Web, Mobile, CRM) en tiempo récord. Experto en arquitecturas modernas (React, Supabase) y automatización de flujos.",
-      "description_en": "Digital Solutions Builder and Applied AI Specialist. I combine software engineering with the power of LLMs to develop complete systems (Web, Mobile, CRM) in record time. Expert in modern architectures (React, Supabase) and workflow automation.",
+      "title": "AI Solutions Developer & Business Architect",
+      "title_es": "Arquitecto de Soluciones IA y Negocio",
+      "description": "Especialista en el desarrollo de sistemas inteligentes mediante Spec Driven Development (SDD). Experto en orquestación de workflows agénticos y conectividad vía MCP para automatizar procesos complejos. Combino la visión estratégica de un MBA con la ejecución técnica en arquitecturas modernas (React, Supabase, Cloud APIs) para crear herramientas que generan eficiencia operativa real.",
+      "description_en": "Specialist in developing intelligent systems through Spec Driven Development (SDD). Expert in agentic workflow orchestration and MCP connectivity to automate complex processes. I combine the strategic vision of an MBA with technical execution in modern architectures (React, Supabase, Cloud APIs) to create tools that generate real operational efficiency.",
       "keywords": [
         "react",
         "gemini",
+        "sdd",
+        "mcp",
+        "ai agents",
+        "workflows",
         "supabase",
-        "ai",
-        "llm",
-        "automation",
-        "builder",
-        "technical product",
-        "full-stack"
+        "cloud apis",
+        "antigravity",
+        "cursor",
+        "llm orchestration",
+        "automation"
       ],
       "skills_focus": [
-        "React",
-        "Supabase",
-        "Gemini API",
-        "Python",
-        "RAG Systems"
+        "Spec Driven Development (SDD)",
+        "Model Context Protocol (MCP)",
+        "Agentic Systems",
+        "Supabase & Cloud APIs",
+        "React & TypeScript"
       ],
       "skills_soft": [
         "Aprendizaje Ágil",
@@ -109,24 +118,32 @@
       "show_engineering": true
     },
     "FINANCE": {
-      "title": "Financial & Risk Analyst",
-      "title_es": "Analista Financiero y de Riesgos",
-      "description": "Economista con sólida formación analítica (MBA + Big Data). Especialista en Análisis de Riesgos, Modelización Financiera y Control de Gestión. Combino la visión macroeconómica con habilidades avanzadas en tratamiento de datos para asegurar el cumplimiento normativo y mejorar la eficiencia operativa.",
-      "description_en": "Economist with a solid analytical background (MBA + Big Data). Specialist in Risk Analysis, Financial Modeling, and Management Control. I combine macroeconomic vision with advanced data processing skills to ensure regulatory compliance and improve operational efficiency.",
+      "title": "Financial & Project Management Analyst",
+      "title_es": "Analista Financiero y de Gestión de Proyectos",
+      "description": "Economista con sólida formación analítica (MBA + Big Data). Especialista en Auditoría, Modelización Financiera y Gestión de Proyectos bajo metodologías de Plan Maestro y Diagramas de Gantt. Capacidad para gestionar flujos de control en sectores complejos (Real Estate/BIM) y asegurar el cumplimiento normativo mediante eficiencia operativa.",
+      "description_en": "Economist with a solid analytical background (MBA + Big Data). Specialist in Audit, Financial Modeling, and Project Management under Master Plan and Gantt Chart methodologies. Ability to manage control flows in complex sectors (Real Estate/BIM) and ensure regulatory compliance through operational efficiency.",
       "keywords": [
         "riesgos",
         "auditoría",
-        "compliance",
+        "control de gestión",
+        "plan maestro",
+        "gantt",
+        "bim",
+        "backflipping",
         "modelado financiero",
-        "finanzas",
-        "banca",
-        "gestión"
+        "finanzas"
       ],
       "skills_focus": [
+        "Project Management (Gantt, Master Plan)",
+        "Control de Gestión y Auditoría",
         "Modelado Financiero",
-        "Análisis de Riesgos",
-        "Auditoría",
-        "Compliance"
+        "BIM & Revit Awareness"
+      ],
+      "skills_focus_en": [
+        "Project Management (Gantt, Master Plan)",
+        "Management Control & Audit",
+        "Financial Modeling",
+        "BIM & Revit Awareness"
       ],
       "skills_soft": [
         "Adaptabilidad al Cambio",
@@ -158,6 +175,12 @@
         "CRM Management",
         "KPIs",
         "Excel Avanzado",
+        "Real Estate Market"
+      ],
+      "skills_focus_en": [
+        "CRM Management",
+        "KPIs",
+        "Advanced Excel",
         "Real Estate Market"
       ],
       "skills_soft": [

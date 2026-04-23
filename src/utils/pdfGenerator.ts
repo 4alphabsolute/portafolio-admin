@@ -9,6 +9,7 @@ export interface CVProfileData {
   description: string;
   description_en?: string;
   skills_focus: string[];
+  skills_focus_en?: string[];
   skills_soft: string[];
   skills_soft_en?: string[];
   show_engineering?: boolean;
@@ -234,7 +235,7 @@ export const generateCVFromData = (
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  const techSkills = profile.skills_focus;
+  const techSkills = language === 'en' ? (profile.skills_focus_en || profile.skills_focus) : profile.skills_focus;
   const softSkills = language === 'en' ? (profile.skills_soft_en || profile.skills_soft) : profile.skills_soft;
 
   const maxItems = Math.max(techSkills.length || 0, softSkills.length || 0);

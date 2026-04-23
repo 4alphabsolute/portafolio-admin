@@ -1,4 +1,4 @@
-import { BarChart3, Database, TrendingUp, Code } from 'lucide-react';
+import { BarChart3, Database, TrendingUp, Code, Cpu, Layout } from 'lucide-react';
 
 interface AboutProps {
   t: any;
@@ -9,7 +9,9 @@ export default function About({ t }: AboutProps) {
     { icon: <BarChart3 size={32} />, name: 'Power BI' },
     { icon: <Database size={32} />, name: 'SQL' },
     { icon: <TrendingUp size={32} />, name: 'Tableau' },
-    { icon: <Code size={32} />, name: 'Python & R' }
+    { icon: <Code size={32} />, name: 'Python & R' },
+    { icon: <Cpu size={32} />, name: 'AI & Architect' },
+    { icon: <Layout size={32} />, name: 'Project Management' }
   ];
 
   return (
@@ -29,7 +31,7 @@ export default function About({ t }: AboutProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
             {skills.map((skill, index) => (
               <div
                 key={index}

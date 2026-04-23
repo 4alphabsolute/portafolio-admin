@@ -76,10 +76,14 @@
     "cloud": [],
     "tools": [
       "Power BI (modelado, DAX)",
-      "Análisis de flujos de caja",
-      "Análisis de estados financieros",
-      "Análisis de riesgo",
-      "Automatización low-code"
+      "Análisis de flujos de caja y estados financieros",
+      "Project Management (Gantt, Plan Maestro)",
+      "BIM & Revit (Contexto de gestión de obras)",
+      "Automatización low-code & AI Workflows",
+      "Spec Driven Development (SDD)",
+      "Model Context Protocol (MCP)",
+      "Cursor, Kiro, Antigravity",
+      "Cloud APIs & Supabase Integration"
     ]
   },
   "projects": [

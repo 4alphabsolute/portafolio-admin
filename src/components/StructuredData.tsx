@@ -11,7 +11,7 @@ export default function StructuredData({ page = 'home' }: StructuredDataProps) {
         "name": "Andrés Almeida",
         "alternateName": ["Andrés Almeida Data Analyst", "Andrés Almeida BI", "Soy Andrés Almeida"],
         "jobTitle": "Data & Business Intelligence Analyst",
-        "description": "Analista de Datos especializado en Power BI, SQL, R y análisis financiero con experiencia en banca y seguros",
+        "description": "Analista de Datos y Arquitecto de Soluciones IA especializado en Power BI, R, SQL, SDD (Spec Driven Development) y sistemas agénticos con MCP.",
         "url": "https://soyandresalmeida.com",
         "email": "soyandresalmeida@gmail.com",
         "telephone": "+34633084828",
@@ -45,13 +45,15 @@ export default function StructuredData({ page = 'home' }: StructuredDataProps) {
             "SQL",
             "R Programming",
             "Python",
+            "Spec Driven Development (SDD)",
+            "AI Agent Orchestration",
+            "MCP (Model Context Protocol)",
             "Data Analysis",
             "Business Intelligence",
             "Financial Analysis",
-            "Risk Analysis",
-            "DAX",
-            "Power Query",
-            "Trading Analysis"
+            "Project Management (Gantt, Master Plan)",
+            "Real Estate Analysis",
+            "DAX"
         ],
         "hasOccupation": {
             "@type": "Occupation",

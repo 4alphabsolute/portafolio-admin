@@ -106,7 +106,7 @@ function App() {
         <Footer t={t} />
       </div>
 
-      <AndyChat />
+      <AndyChat language={language} />
       <CookieBanner t={t} />
     </div>
   );

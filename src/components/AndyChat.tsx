@@ -23,7 +23,11 @@ interface UserProfile {
 }
 
 
-export default function AndyChat() {
+interface AndyChatProps {
+  language?: 'es' | 'en';
+}
+
+export default function AndyChat({ language: siteLang = 'es' }: AndyChatProps) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -41,6 +45,11 @@ export default function AndyChat() {
   const [messageHistory, setMessageHistory] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync language with site language toggle
+  useEffect(() => {
+    setUserProfile(prev => ({ ...prev, language: siteLang }));
+  }, [siteLang]);
 
   // Convert and Compress Image to Gemini Inline Data
   async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: string; mimeType: string } }> {
@@ -511,8 +520,8 @@ export default function AndyChat() {
         ${JSON.stringify({
           experiencia_base_seguros: cvProfiles.experience_variants.default.seguros,
           experiencia_base_banco: cvProfiles.experience_variants.default.banco,
-          skills_tech_generales: ["SQL", "Power BI", "R", "ETL", "Tableau", "Agile", "Scrum", "React", "Modelado Financiero", "Riesgos", "Auditoría"],
-          skills_soft_generales: ["Pensamiento Crítico", "Resolución de Problemas", "Adaptabilidad", "Liderazgo", "Empatía", "Comunicación Analítica"]
+          skills_tech_generales: ["SQL", "Power BI", "R", "ETL", "Tableau", "Agile", "Scrum", "React", "Modelado Financiero", "Riesgos", "Auditoría", "Spec Driven Development (SDD)", "MCP", "Workflows Agénticos", "BIM & Revit Context"],
+          skills_soft_generales: ["Pensamiento Crítico", "Resolución de Problemas", "Adaptabilidad", "Liderazgo", "Empatía", "Comunicación Analítica", "Aprendizaje Ágil", "Visión de Producto"]
         })}`;
       } else {
         const promptMain = (basePrompt + contextualPrompt).replace(/^\s+/gm, '');
@@ -550,8 +559,15 @@ export default function AndyChat() {
 
       if (userProfile.type === 'strategist') {
         try {
-          // Clean up potential markdown code block formatting
-          const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+          // Robust JSON extraction: look for the first '{' and the last '}'
+          const jsonStart = text.indexOf('{');
+          const jsonEnd = text.lastIndexOf('}');
+          
+          if (jsonStart === -1 || jsonEnd === -1) {
+            throw new Error('No se encontró un bloque JSON válido en la respuesta.');
+          }
+          
+          const cleanText = text.substring(jsonStart, jsonEnd + 1);
           const parsedData = JSON.parse(cleanText);
 
           const { generateCVFromData } = await import('../utils/pdfGenerator');
@@ -620,7 +636,7 @@ export default function AndyChat() {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
                 </svg>
-                <span className="hidden group-hover:inline text-sm">Cerrar</span>
+                <span className="hidden group-hover:inline text-sm">{siteLang === 'en' ? 'Close' : 'Cerrar'}</span>
               </>
             ) : (
               <>
@@ -643,7 +659,7 @@ export default function AndyChat() {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 leading-tight">AndyBot</h3>
-                <p className="text-xs text-blue-600 font-medium">Asistente IA • En línea</p>
+                <p className="text-xs text-blue-600 font-medium">{siteLang === 'en' ? 'AI Assistant • Online' : 'Asistente IA • En línea'}</p>
               </div>
               <button
                 onClick={() => setOpen(false)}
@@ -667,28 +683,30 @@ export default function AndyChat() {
                   👋
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 text-lg">¡Hola! Soy AndyBot</h4>
+                  <h4 className="font-bold text-gray-900 text-lg">{siteLang === 'en' ? 'Hi! I\'m AndyBot' : '¡Hola! Soy AndyBot'}</h4>
                   <p className="text-sm text-gray-500 max-w-[250px] mx-auto mt-1 leading-relaxed">
-                    Pregúntame sobre la experiencia, habilidades y proyectos de Andrés.
+                    {siteLang === 'en'
+                      ? "Ask me about Andrés's experience, skills and projects."
+                      : 'Pregúntame sobre la experiencia, habilidades y proyectos de Andrés.'}
                   </p>
                 </div>
 
                 {/* Botones de CV rápido */}
                 <div className="w-full max-w-xs space-y-3 pt-4 border-t border-gray-100">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Generar CV Personalizado</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{siteLang === 'en' ? 'Generate Personalized CV' : 'Generar CV Personalizado'}</p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {Object.entries(cvProfiles.profiles).map(([key, profile]) => (
                       <button
                         key={key}
-                        onClick={() => generateDynamicCV(key)}
+                        onClick={() => generateDynamicCV(key, siteLang)}
                         className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all duration-200 shadow-sm"
-                        title={profile.description}
+                        title={siteLang === 'en' ? (profile as any).description_en || profile.description : profile.description}
                       >
-                        {key === 'DATA' ? '📊 Datos' :
+                        {key === 'DATA' ? (siteLang === 'en' ? '📊 Data' : '📊 Datos') :
                           key === 'FINTECH' ? '💳 Fintech' :
                             key === 'BUILDER' ? '🛠️ Dev AI' :
-                              key === 'FINANCE' ? '📈 Finanzas' :
-                                '💼 Ventas'}
+                              key === 'FINANCE' ? (siteLang === 'en' ? '📈 Finance' : '📈 Finanzas') :
+                                (siteLang === 'en' ? '💼 Sales' : '💼 Ventas')}
                       </button>
                     ))}
                   </div>
@@ -732,7 +750,7 @@ export default function AndyChat() {
                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
                     <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                   </div>
-                  <span className="text-xs text-blue-600 font-medium tracking-wide">Analizando...</span>
+                  <span className="text-xs text-blue-600 font-medium tracking-wide">{siteLang === 'en' ? 'Analyzing...' : 'Analizando...'}</span>
                 </div>
               </div>
             )}
@@ -743,17 +761,17 @@ export default function AndyChat() {
             <div className="bg-blue-50 border-t border-blue-100 p-2 px-4 flex justify-between items-center animate-slideIn">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-blue-700">
-                  🎯 Perfil Detectado: {userProfile.type === 'recruiter' ? 'Reclutador' : userProfile.type === 'technical' ? 'Técnico' : 'General'}
+                  🎯 {siteLang === 'en' ? 'Detected Profile:' : 'Perfil Detectado:'} {userProfile.type === 'recruiter' ? (siteLang === 'en' ? 'Recruiter' : 'Reclutador') : userProfile.type === 'technical' ? (siteLang === 'en' ? 'Technical' : 'Técnico') : (siteLang === 'en' ? 'General' : 'General')}
                 </span>
               </div>
               <button
-                onClick={() => generateDynamicCV(suggestCVProfile(conversationContext), userProfile.language)}
+                onClick={() => generateDynamicCV(suggestCVProfile(conversationContext), siteLang)}
                 className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Descargar CV
+                {siteLang === 'en' ? 'Download CV' : 'Descargar CV'}
               </button>
             </div>
           )}
@@ -802,7 +820,7 @@ export default function AndyChat() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !sending && send()}
                 onPaste={handlePaste}
-                placeholder="Escribe tu mensaje o pega una imagen..."
+                placeholder={siteLang === 'en' ? 'Type your message or paste an image...' : 'Escribe tu mensaje o pega una imagen...'}
                 className="flex-1 bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                 disabled={sending}
               />
